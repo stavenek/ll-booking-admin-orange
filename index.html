@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lustiga Landet – Booking Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: #333;
+    }
+
+    header {
+      background: #4caf50;
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    header label {
+      font-weight: bold;
+    }
+
+    header input[type="password"],
+    #filterInput {
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    header button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #fff;
+      color: #4caf50;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    header button:hover:not(:disabled) {
+      background: #d6ffd8;
+    }
+
+    #filterContainer {
+      margin: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f1f1f1;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .pagination {
+      margin: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pagination button {
+      padding: 6px 10px;
+      border: 1px solid #4caf50;
+      background: #fff;
+      color: #4caf50;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #4caf50;
+      color: #fff;
+    }
+
+    .pagination button:disabled {
+      background: #4caf50;
+      color: #fff;
+      cursor: default;
+    }
+
+    .error {
+      color: #d32f2f;
+      margin: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <label for="pwd">Admin&nbsp;password:</label>
+    <input type="password" id="pwd" placeholder="Enter password" autocomplete="current-password" />
+    <button id="setPwdBtn">Load bookings</button>
+  </header>
+
+  <div id="filterContainer" style="display: none;">
+    <input type="text" id="filterInput" placeholder="Filter bookings…" />
+  </div>
+
+  <div id="error" class="error"></div>
+
+  <div id="tableContainer"></div>
+  <div class="pagination" id="pagination"></div>
+
+  <script>
+    const API_BASE =
+      "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
+    let adminPwd = "";
+    let allBookings = [];
+    let filteredBookings = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+
+    // Elements
+    const pwdInput = document.getElementById("pwd");
+    const setPwdBtn = document.getElementById("setPwdBtn");
+    const filterContainer = document.getElementById("filterContainer");
+    const filterInput = document.getElementById("filterInput");
+    const errorDiv = document.getElementById("error");
+    const tableContainer = document.getElementById("tableContainer");
+    const paginationDiv = document.getElementById("pagination");
+
+    setPwdBtn.addEventListener("click", () => {
+      adminPwd = pwdInput.value.trim();
+      if (!adminPwd) {
+        alert("Please enter the admin password.");
+        return;
+      }
+      fetchBookings();
+    });
+
+    filterInput.addEventListener("input", (evt) => {
+      const term = evt.target.value.toLowerCase();
+      filterBookings(term);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    });
+
+    function fetchBookings() {
+      errorDiv.textContent = "";
+      filterContainer.style.display = "none";
+      tableContainer.innerHTML = "Loading…";
+      paginationDiv.innerHTML = "";
+
+      fetch(`${API_BASE}/bookings?admin=${encodeURIComponent(adminPwd)}`)
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Failed to fetch bookings – check password?");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          allBookings = Array.isArray(data) ? data : [];
+          filteredBookings = allBookings;
+          filterContainer.style.display = "block";
+          currentPage = 1;
+          renderTable();
+          renderPagination();
+        })
+        .catch((err) => {
+          tableContainer.innerHTML = "";
+          errorDiv.textContent = err.message;
+        });
+    }
+
+    function filterBookings(term) {
+      if (!term) {
+        filteredBookings = allBookings;
+        return;
+      }
+      filteredBookings = allBookings.filter((b) => {
+        return Object.values(b).some((v) =>
+          String(v).toLowerCase().includes(term)
+        );
+      });
+    }
+
+    function renderTable() {
+      tableContainer.innerHTML = "";
+      if (filteredBookings.length === 0) {
+        tableContainer.textContent = "No bookings found.";
+        return;
+      }
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = filteredBookings.slice(start, start + PAGE_SIZE);
+
+      const headers = [
+        "Date",
+        "Time",
+        "Name",
+        "Cars",
+        "Adults",
+        "Kids",
+        "Email",
+        "Status",
+        "Created",
+        "ID",
+      ];
+
+      let html = "<table><thead><tr>";
+      headers.forEach((h) => (html += `<th>${h}</th>`));
+      html += "</tr></thead><tbody>";
+
+      pageItems.forEach((b) => {
+        html +=
+          `<tr>` +
+          `<td>${b.dateStr}</td>` +
+          `<td>${b.timeStr}</td>` +
+          `<td>${b.name}</td>` +
+          `<td>${b.numberOfCars}</td>` +
+          `<td>${b.numberOfPeople}</td>` +
+          `<td>${b.numberOfKids}</td>` +
+          `<td>${b.email}</td>` +
+          `<td>${b.status || ""}</td>` +
+          `<td>${b.created ? new Date(b.created).toLocaleString() : ""}</td>` +
+          `<td>${b.bookingId}</td>` +
+          `</tr>`;
+      });
+
+      html += "</tbody></table>";
+      tableContainer.innerHTML = html;
+    }
+
+    function renderPagination() {
+      paginationDiv.innerHTML = "";
+      const pageCount = Math.ceil(filteredBookings.length / PAGE_SIZE);
+      if (pageCount <= 1) return;
+
+      for (let i = 1; i <= pageCount; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.disabled = true;
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          renderTable();
+          renderPagination();
+        });
+        paginationDiv.appendChild(btn);
+      }
+    }
+  </script>
+</body>
+</html>
