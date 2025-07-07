@@ -122,14 +122,14 @@
         "Email",
         "Status",
         "Created",
-        "ID",
+        "ID"
       ];
 
       let html = "<table><thead><tr>";
       headers.forEach((h) => (html += `<th>${h}</th>`));
       html += "</tr></thead><tbody>";
 
-      pageItems.forEach((b) => {
+      pageItems.forEach((b, idx) => {
         html +=
           `<tr>` +
           `<td>${b.dateStr}</td>` +
@@ -139,7 +139,13 @@
           `<td>${b.numberOfPeople}</td>` +
           `<td>${b.numberOfKids}</td>` +
           `<td>${b.email}</td>` +
-          `<td>${b.status || ""}</td>` +
+          `<td>` +
+            `<select data-idx="${start + idx}" class="status-select">
+              <option value="NEW" ${b.status === 'NEW' ? 'selected' : ''}>NEW</option>
+              <option value="REMOVED" ${b.status === 'REMOVED' ? 'selected' : ''}>REMOVED</option>
+              <option value="CHECKED_IN" ${b.status === 'CHECKED_IN' ? 'selected' : ''}>CHECKED_IN</option>
+            </select>` +
+          `</td>` +
           `<td>${b.created ? new Date(b.created).toLocaleString() : ""}</td>` +
           `<td>${b.bookingId}</td>` +
           `</tr>`;
@@ -147,6 +153,53 @@
 
       html += "</tbody></table>";
       tableContainer.innerHTML = html;
+
+      // Add event listeners for status change
+      document.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', function(evt) {
+          const idx = parseInt(this.getAttribute('data-idx'));
+          const booking = filteredBookings[idx];
+          const newStatus = this.value;
+          if (booking.status === newStatus) return;
+          updateBookingStatus(booking.bookingId, newStatus, this);
+        });
+      });
+    }
+
+    function updateBookingStatus(bookingId, newStatus, selectEl) {
+      console.log(`Changing status of booking ${bookingId} to ${newStatus}`);
+      selectEl.disabled = true;
+      // Find the booking object
+      const booking = allBookings.find(b => b.bookingId === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        selectEl.disabled = false;
+        return;
+      }
+      // Update the status locally before sending
+      booking.status = newStatus;
+
+      // Save the full booking back to the correct API endpoint (no /status endpoint)
+      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
+      console.log("Saving booking to:", url);
+      fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(booking),
+      })
+        .then(res => {
+          console.log(`Response status: ${res.status} ${res.statusText}`);
+          if (!res.ok) throw new Error('Failed to save booking');
+          console.log(`Booking ${bookingId} status changed to ${newStatus} and saved.`);
+          renderTable();
+          if (typeof renderPagination === 'function') renderPagination();
+        })
+        .catch(err => {
+          alert(err.message);
+          selectEl.disabled = false;
+        });
     }
 
     function renderPagination() {
