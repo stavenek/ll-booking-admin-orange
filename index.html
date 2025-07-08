@@ -109,14 +109,22 @@
         return;
       }
 
+      // Always sort by dateStr ascending before rendering
+      const sortedBookings = [...filteredBookings].sort((a, b) => {
+        // Try to parse as date, fallback to string compare
+        const da = Date.parse(a.dateStr);
+        const db = Date.parse(b.dateStr);
+        if (!isNaN(da) && !isNaN(db)) return da - db;
+        return a.dateStr.localeCompare(b.dateStr);
+      });
+
       const start = (currentPage - 1) * PAGE_SIZE;
-      const pageItems = filteredBookings.slice(start, start + PAGE_SIZE);
+      const pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
 
       const headers = [
         "Date",
         "Time",
         "Name",
-        "Cars",
         "Adults",
         "Kids",
         "Email",
@@ -133,9 +141,15 @@
         html +=
           `<tr>` +
           `<td>${b.dateStr}</td>` +
-          `<td>${b.timeStr}</td>` +
+          `<td>` +
+            `<select data-idx="${start + idx}" class="time-select">
+              <option value="10:00" ${b.timeStr === '10:00' ? 'selected' : ''}>10:00</option>
+              <option value="11:00" ${b.timeStr === '11:00' ? 'selected' : ''}>11:00</option>
+              <option value="12:00" ${b.timeStr === '12:00' ? 'selected' : ''}>12:00</option>
+              <option value="13:00" ${b.timeStr === '13:00' ? 'selected' : ''}>13:00</option>
+            </select>` +
+          `</td>` +
           `<td>${b.name}</td>` +
-          `<td>${b.numberOfCars}</td>` +
           `<td>${b.numberOfPeople}</td>` +
           `<td>${b.numberOfKids}</td>` +
           `<td>${b.email}</td>` +
@@ -158,10 +172,21 @@
       document.querySelectorAll('.status-select').forEach(sel => {
         sel.addEventListener('change', function(evt) {
           const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = filteredBookings[idx];
+          const booking = sortedBookings[start + idx];
           const newStatus = this.value;
           if (booking.status === newStatus) return;
           updateBookingStatus(booking.bookingId, newStatus, this);
+        });
+      });
+
+      // Add event listeners for time change
+      document.querySelectorAll('.time-select').forEach(sel => {
+        sel.addEventListener('change', function(evt) {
+          const idx = parseInt(this.getAttribute('data-idx'));
+          const booking = sortedBookings[start + idx];
+          const newTime = this.value;
+          if (booking.timeStr === newTime) return;
+          updateBookingTime(booking.bookingId, newTime, this);
         });
       });
     }
@@ -193,6 +218,38 @@
           console.log(`Response status: ${res.status} ${res.statusText}`);
           if (!res.ok) throw new Error('Failed to save booking');
           console.log(`Booking ${bookingId} status changed to ${newStatus} and saved.`);
+          renderTable();
+          if (typeof renderPagination === 'function') renderPagination();
+        })
+        .catch(err => {
+          alert(err.message);
+          selectEl.disabled = false;
+        });
+    }
+
+    function updateBookingTime(bookingId, newTime, selectEl) {
+      console.log(`Changing time of booking ${bookingId} to ${newTime}`);
+      selectEl.disabled = true;
+      const booking = allBookings.find(b => b.bookingId === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        selectEl.disabled = false;
+        return;
+      }
+      booking.timeStr = newTime;
+      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
+      console.log("Saving booking to:", url);
+      fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(booking),
+      })
+        .then(res => {
+          console.log(`Response status: ${res.status} ${res.statusText}`);
+          if (!res.ok) throw new Error('Failed to save booking');
+          console.log(`Booking ${bookingId} time changed to ${newTime} and saved.`);
           renderTable();
           if (typeof renderPagination === 'function') renderPagination();
         })
