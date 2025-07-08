@@ -17,3 +17,8 @@ You can easily run this app locally by serving the `index.html` file with a simp
 3. Open your browser and go to the URL shown in the terminal (usually [http://localhost:3000](http://localhost:3000)).
 
 You can now use the admin interface in your browser.
+
+
+git remote add origin git@github.com:stavenek/ll-booking-admin-orange.git
+git branch -M main
+git push -u origin main
