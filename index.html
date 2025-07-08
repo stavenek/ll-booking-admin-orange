@@ -176,8 +176,6 @@
         selectEl.disabled = false;
         return;
       }
-      // Save the old status for comparison
-      const oldStatus = booking.status;
       // Update the status locally before sending
       booking.status = newStatus;
 
@@ -195,11 +193,6 @@
           console.log(`Response status: ${res.status} ${res.statusText}`);
           if (!res.ok) throw new Error('Failed to save booking');
           console.log(`Booking ${bookingId} status changed to ${newStatus} and saved.`);
-          // If status changed from NEW to something else, remove from local state
-          if (oldStatus === 'NEW' && newStatus !== 'NEW') {
-            allBookings = allBookings.filter(b => b.bookingId !== bookingId);
-            filteredBookings = filteredBookings.filter(b => b.bookingId !== bookingId);
-          }
           renderTable();
           if (typeof renderPagination === 'function') renderPagination();
         })
