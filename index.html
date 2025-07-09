@@ -222,12 +222,37 @@
       });
     }
 
+    // Add a modal for blocking UI during updates
+    const updateModal = document.createElement('div');
+    updateModal.id = 'updateModal';
+    updateModal.style.display = 'none';
+    updateModal.style.position = 'fixed';
+    updateModal.style.top = 0;
+    updateModal.style.left = 0;
+    updateModal.style.width = '100vw';
+    updateModal.style.height = '100vh';
+    updateModal.style.background = 'rgba(0,0,0,0.4)';
+    updateModal.style.zIndex = 9999;
+    updateModal.style.alignItems = 'center';
+    updateModal.style.justifyContent = 'center';
+    updateModal.innerHTML = '<div style="background:#fff;padding:2em 3em;border-radius:8px;font-size:1.3em;box-shadow:0 2px 16px #0002;">Updating…</div>';
+    document.body.appendChild(updateModal);
+
+    function showUpdateModal() {
+      updateModal.style.display = 'flex';
+    }
+    function hideUpdateModal() {
+      updateModal.style.display = 'none';
+    }
+
     function updateBookingField(bookingId, field, value, selectEl) {
       selectEl.disabled = true;
+      showUpdateModal();
       const booking = allBookings.find(b => b.bookingId === bookingId);
       if (!booking) {
         alert('Booking not found');
         selectEl.disabled = false;
+        hideUpdateModal();
         return;
       }
       booking[field] = value;
@@ -247,6 +272,9 @@
         .catch(err => {
           alert(err.message);
           selectEl.disabled = false;
+        })
+        .finally(() => {
+          hideUpdateModal();
         });
     }
 
