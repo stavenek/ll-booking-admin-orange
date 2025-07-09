@@ -21,6 +21,9 @@
 
   <div id="tableContainer"></div>
   <div class="pagination" id="pagination"></div>
+  <div id="bookingStats" style="position:fixed;top:10px;right:20px;font-size:1.1em;background:#fff3;padding:0.5em 1.2em;border-radius:8px;box-shadow:0 2px 8px #0001;z-index:10000;">
+    <span id="totalBookings">0</span> / <span id="filteredBookings">0</span>
+  </div>
 
   <script>
     const API_BASE =
@@ -39,6 +42,9 @@
     const errorDiv = document.getElementById("error");
     const tableContainer = document.getElementById("tableContainer");
     const paginationDiv = document.getElementById("pagination");
+    const bookingStats = document.getElementById("bookingStats");
+    const totalBookingsSpan = document.getElementById("totalBookings");
+    const filteredBookingsSpan = document.getElementById("filteredBookings");
 
     setPwdBtn.addEventListener("click", () => {
       adminPwd = pwdInput.value.trim();
@@ -84,6 +90,7 @@
           currentPage = 1;
           renderTable();
           renderPagination();
+          updateBookingStats();
         })
         .catch((err) => {
           tableContainer.innerHTML = "";
@@ -101,6 +108,7 @@
           String(v).toLowerCase().includes(term)
         );
       });
+      updateBookingStats();
     }
 
     function renderTable() {
@@ -176,6 +184,7 @@
 
       html += "</tbody></table>";
       tableContainer.innerHTML = html;
+      updateBookingStats();
 
       // Add event listeners for status change
       document.querySelectorAll('.status-select').forEach(sel => {
@@ -310,6 +319,11 @@
         });
         paginationDiv.appendChild(btn);
       }
+    }
+
+    function updateBookingStats() {
+      totalBookingsSpan.textContent = allBookings.length;
+      filteredBookingsSpan.textContent = filteredBookings.length;
     }
   </script>
 </body>
