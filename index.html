@@ -222,7 +222,7 @@
       });
     }
 
-    function updateBookingStatus(bookingId, newStatus, selectEl) {
+    function updateBookingField(bookingId, field, value, selectEl) {
       selectEl.disabled = true;
       const booking = allBookings.find(b => b.bookingId === bookingId);
       if (!booking) {
@@ -230,7 +230,7 @@
         selectEl.disabled = false;
         return;
       }
-      booking.status = newStatus;
+      booking[field] = value;
       const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
       fetch(url, {
         method: 'PUT',
@@ -248,90 +248,22 @@
           alert(err.message);
           selectEl.disabled = false;
         });
+    }
+
+    function updateBookingStatus(bookingId, newStatus, selectEl) {
+      updateBookingField(bookingId, 'status', newStatus, selectEl);
     }
 
     function updateBookingTime(bookingId, newTime, selectEl) {
-      selectEl.disabled = true;
-      const booking = allBookings.find(b => b.bookingId === bookingId);
-      if (!booking) {
-        alert('Booking not found');
-        selectEl.disabled = false;
-        return;
-      }
-      booking.timeStr = newTime;
-      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
-      fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(booking),
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to save booking');
-          renderTable();
-          if (typeof renderPagination === 'function') renderPagination();
-        })
-        .catch(err => {
-          alert(err.message);
-          selectEl.disabled = false;
-        });
+      updateBookingField(bookingId, 'timeStr', newTime, selectEl);
     }
 
     function updateBookingAdults(bookingId, newAdults, selectEl) {
-      selectEl.disabled = true;
-      const booking = allBookings.find(b => b.bookingId === bookingId);
-      if (!booking) {
-        alert('Booking not found');
-        selectEl.disabled = false;
-        return;
-      }
-      booking.numberOfPeople = newAdults;
-      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
-      fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(booking),
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to save booking');
-          renderTable();
-          if (typeof renderPagination === 'function') renderPagination();
-        })
-        .catch(err => {
-          alert(err.message);
-          selectEl.disabled = false;
-        });
+      updateBookingField(bookingId, 'numberOfPeople', newAdults, selectEl);
     }
 
     function updateBookingKids(bookingId, newKids, selectEl) {
-      selectEl.disabled = true;
-      const booking = allBookings.find(b => b.bookingId === bookingId);
-      if (!booking) {
-        alert('Booking not found');
-        selectEl.disabled = false;
-        return;
-      }
-      booking.numberOfKids = newKids;
-      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
-      fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(booking),
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to save booking');
-          renderTable();
-          if (typeof renderPagination === 'function') renderPagination();
-        })
-        .catch(err => {
-          alert(err.message);
-          selectEl.disabled = false;
-        });
+      updateBookingField(bookingId, 'numberOfKids', newKids, selectEl);
     }
 
     function renderPagination() {
