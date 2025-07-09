@@ -22,6 +22,249 @@
   <div id="tableContainer"></div>
   <div class="pagination" id="pagination"></div>
 
-  <script src="app.js"></script>
+  <script>
+    const API_BASE =
+      "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
+    let adminPwd = "";
+    let allBookings = [];
+    let filteredBookings = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+
+    // Elements
+    const pwdInput = document.getElementById("pwd");
+    const setPwdBtn = document.getElementById("setPwdBtn");
+    const filterContainer = document.getElementById("filterContainer");
+    const filterInput = document.getElementById("filterInput");
+    const errorDiv = document.getElementById("error");
+    const tableContainer = document.getElementById("tableContainer");
+    const paginationDiv = document.getElementById("pagination");
+
+    setPwdBtn.addEventListener("click", () => {
+      adminPwd = pwdInput.value.trim();
+      if (!adminPwd) {
+        alert("Please enter the admin password.");
+        return;
+      }
+      filterInput.value = "";
+      fetchBookings();
+    });
+
+    pwdInput.addEventListener("keydown", (evt) => {
+      if (evt.key === "Enter") {
+        setPwdBtn.click();
+      }
+    });
+
+    filterInput.addEventListener("input", (evt) => {
+      const term = evt.target.value.toLowerCase();
+      filterBookings(term);
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    });
+
+    function fetchBookings() {
+      errorDiv.textContent = "";
+      filterContainer.style.display = "none";
+      tableContainer.innerHTML = "Loading…";
+      paginationDiv.innerHTML = "";
+
+      fetch(`${API_BASE}/bookings?admin=${encodeURIComponent(adminPwd)}`)
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Failed to fetch bookings – check password?");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          allBookings = Array.isArray(data) ? data : [];
+          filteredBookings = allBookings;
+          filterContainer.style.display = "block";
+          currentPage = 1;
+          renderTable();
+          renderPagination();
+        })
+        .catch((err) => {
+          tableContainer.innerHTML = "";
+          errorDiv.textContent = err.message;
+        });
+    }
+
+    function filterBookings(term) {
+      if (!term) {
+        filteredBookings = allBookings;
+        return;
+      }
+      filteredBookings = allBookings.filter((b) => {
+        return Object.values(b).some((v) =>
+          String(v).toLowerCase().includes(term)
+        );
+      });
+    }
+
+    function renderTable() {
+      tableContainer.innerHTML = "";
+      if (filteredBookings.length === 0) {
+        tableContainer.textContent = "No bookings found.";
+        return;
+      }
+
+      // Always sort by dateStr ascending before rendering
+      const sortedBookings = [...filteredBookings].sort((a, b) => {
+        // Try to parse as date, fallback to string compare
+        const da = Date.parse(a.dateStr);
+        const db = Date.parse(b.dateStr);
+        if (!isNaN(da) && !isNaN(db)) return da - db;
+        return a.dateStr.localeCompare(b.dateStr);
+      });
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
+
+      const headers = [
+        "Date",
+        "Time",
+        "Name",
+        "Adults",
+        "Kids",
+        "Email",
+        "Status",
+        "Created",
+        "ID"
+      ];
+
+      let html = "<table><thead><tr>";
+      headers.forEach((h) => (html += `<th>${h}</th>`));
+      html += "</tr></thead><tbody>";
+
+      pageItems.forEach((b, idx) => {
+        html +=
+          `<tr>` +
+          `<td>${b.dateStr}</td>` +
+          `<td>` +
+            `<select data-idx="${start + idx}" class="time-select">
+              <option value="10:00" ${b.timeStr === '10:00' ? 'selected' : ''}>10:00</option>
+              <option value="11:00" ${b.timeStr === '11:00' ? 'selected' : ''}>11:00</option>
+              <option value="12:00" ${b.timeStr === '12:00' ? 'selected' : ''}>12:00</option>
+              <option value="13:00" ${b.timeStr === '13:00' ? 'selected' : ''}>13:00</option>
+            </select>` +
+          `</td>` +
+          `<td>${b.name}</td>` +
+          `<td>${b.numberOfPeople}</td>` +
+          `<td>${b.numberOfKids}</td>` +
+          `<td>${b.email}</td>` +
+          `<td>` +
+            `<select data-idx="${start + idx}" class="status-select">
+              <option value="NEW" ${b.status === 'NEW' ? 'selected' : ''}>NEW</option>
+              <option value="REMOVED" ${b.status === 'REMOVED' ? 'selected' : ''}>REMOVED</option>
+              <option value="CHECKED_IN" ${b.status === 'CHECKED_IN' ? 'selected' : ''}>CHECKED_IN</option>
+            </select>` +
+          `</td>` +
+          `<td>${b.created ? new Date(b.created).toLocaleString() : ""}</td>` +
+          `<td>${b.bookingId}</td>` +
+          `</tr>`;
+      });
+
+      html += "</tbody></table>";
+      tableContainer.innerHTML = html;
+
+      // Add event listeners for status change
+      document.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', function(evt) {
+          const idx = parseInt(this.getAttribute('data-idx'));
+          const booking = sortedBookings[start + idx];
+          const newStatus = this.value;
+          if (booking.status === newStatus) return;
+          updateBookingStatus(booking.bookingId, newStatus, this);
+        });
+      });
+
+      // Add event listeners for time change
+      document.querySelectorAll('.time-select').forEach(sel => {
+        sel.addEventListener('change', function(evt) {
+          const idx = parseInt(this.getAttribute('data-idx'));
+          const booking = sortedBookings[start + idx];
+          const newTime = this.value;
+          if (booking.timeStr === newTime) return;
+          updateBookingTime(booking.bookingId, newTime, this);
+        });
+      });
+    }
+
+    function updateBookingStatus(bookingId, newStatus, selectEl) {
+      selectEl.disabled = true;
+      const booking = allBookings.find(b => b.bookingId === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        selectEl.disabled = false;
+        return;
+      }
+      booking.status = newStatus;
+      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
+      fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(booking),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to save booking');
+          renderTable();
+          if (typeof renderPagination === 'function') renderPagination();
+        })
+        .catch(err => {
+          alert(err.message);
+          selectEl.disabled = false;
+        });
+    }
+
+    function updateBookingTime(bookingId, newTime, selectEl) {
+      selectEl.disabled = true;
+      const booking = allBookings.find(b => b.bookingId === bookingId);
+      if (!booking) {
+        alert('Booking not found');
+        selectEl.disabled = false;
+        return;
+      }
+      booking.timeStr = newTime;
+      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
+      fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(booking),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to save booking');
+          renderTable();
+          if (typeof renderPagination === 'function') renderPagination();
+        })
+        .catch(err => {
+          alert(err.message);
+          selectEl.disabled = false;
+        });
+    }
+
+    function renderPagination() {
+      paginationDiv.innerHTML = "";
+      const pageCount = Math.ceil(filteredBookings.length / PAGE_SIZE);
+      if (pageCount <= 1) return;
+
+      for (let i = 1; i <= pageCount; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.disabled = true;
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          renderTable();
+          renderPagination();
+        });
+        paginationDiv.appendChild(btn);
+      }
+    }
+  </script>
 </body>
 </html>
