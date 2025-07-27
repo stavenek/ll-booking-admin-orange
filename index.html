@@ -27,8 +27,8 @@
 
   <script>
     const API_BASE =
-      //"https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
-      "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod//llb/v1";
+      "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
+      //"https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod//llb/v1";
     let adminPwd = "";
     let allBookings = [];
     let filteredBookings = [];
@@ -179,6 +179,9 @@
       html += "</tr></thead><tbody>";
 
       pageItems.forEach((b, idx) => {
+        // Guard: ensure status is a valid string
+        const validStatuses = ['NEW', 'REMOVED', 'CHECKED_IN'];
+        let status = typeof b.status === 'string' && validStatuses.includes(b.status) ? b.status : 'NEW';
         html +=
           `<tr>` +
           `<td>` +
@@ -208,9 +211,9 @@
           `<td>${b.email}</td>` +
           `<td>` +
             `<select data-idx="${start + idx}" class="status-select">
-              <option value="NEW" ${b.status === 'NEW' ? 'selected' : ''}>NEW</option>
-              <option value="REMOVED" ${b.status === 'REMOVED' ? 'selected' : ''}>REMOVED</option>
-              <option value="CHECKED_IN" ${b.status === 'CHECKED_IN' ? 'selected' : ''}>CHECKED_IN</option>
+              <option value="NEW" ${status === 'NEW' ? 'selected' : ''}>NEW</option>
+              <option value="REMOVED" ${status === 'REMOVED' ? 'selected' : ''}>REMOVED</option>
+              <option value="CHECKED_IN" ${status === 'CHECKED_IN' ? 'selected' : ''}>CHECKED_IN</option>
             </select>` +
           `</td>` +
           `<td>${b.created ? new Date(b.created).toLocaleString() : ""}</td>` +
