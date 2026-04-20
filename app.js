@@ -8,6 +8,7 @@ let filteredBookings = [];
 let currentPage = 1;
 const PAGE_SIZE = 10;
 let availableDates = [];
+let slotStatusesByDate = {};
 let allTemplates = [];
 let allPlaceholders = [];
 let editingTemplateId = null;
@@ -199,17 +200,20 @@ function fetchBookings() {
 }
 
 function fetchAvailableDates() {
-  return fetch(API_BASE + "/slots")
+  return fetch(API_BASE + "/slots?admin=" + encodeURIComponent(adminPwd))
     .then(function (res) {
       if (!res.ok) throw new Error("Failed to fetch available dates");
       return res.json();
     })
     .then(function (data) {
+      slotStatusesByDate = {};
       var dateSet = new Set();
       data.forEach(function (slot) {
         if (slot.isOpen && slot.isAvailable) {
           dateSet.add(slot.dateStr);
         }
+        if (!slotStatusesByDate[slot.dateStr]) slotStatusesByDate[slot.dateStr] = {};
+        slotStatusesByDate[slot.dateStr][slot.startTime] = slot;
       });
       availableDates = Array.from(dateSet).sort();
     });
@@ -852,10 +856,26 @@ function detectPresetId(rows) {
 }
 
 function renderHourSlotList(container, rows) {
+  var statusesForDay = slotStatusesByDate[selectedDateStr] || {};
   container.innerHTML = rows.map(function (row) {
+    var status = statusesForDay[row.startTime];
+    var countHtml = "";
+    if (status) {
+      var kids = status.numberOfKids || 0;
+      var ad = status.numberOfAdults || 0;
+      var pens = status.numberOfPensioners || 0;
+      var total = kids + ad + pens;
+      var cls = total > 0 ? "hs-counts hs-counts-has" : "hs-counts";
+      countHtml = '<span class="' + cls + '" title="kids / adults / pensioners = total">' +
+        kids + '/' + ad + '/' + pens + ' = ' + total +
+        '</span>';
+    } else {
+      countHtml = '<span class="hs-counts hs-counts-none">—</span>';
+    }
     return '<label class="hour-slot-row">' +
       '<input type="checkbox" class="hs-enabled"' + (row.enabled ? " checked" : "") + ' data-start="' + row.startTime + '" data-end="' + row.endTime + '" />' +
       '<span class="hs-time">' + row.startTime + ' – ' + row.endTime + '</span>' +
+      countHtml +
       '<input type="number" class="hs-cap" min="0" max="500" value="' + row.cap + '"' + (row.enabled ? "" : " disabled") + ' />' +
       '<span class="hs-cap-label">max</span>' +
       '</label>';
@@ -899,6 +919,7 @@ function renderDayDetail() {
   html += '<select id="presetSelect">' + presetOptions + '</select>';
   html += '</div>';
   html += '<div class="hour-slot-list" id="hourSlotList"></div>';
+  html += '<div class="hour-slot-legend">Bookings per slot: <strong>kids</strong> / <strong>adults</strong> / <strong>pensioners</strong> = <strong>total</strong> &nbsp;·&nbsp; — = no data</div>';
   html += '<div class="day-detail-actions">';
   html += '<button class="btn-save" id="saveDayBtn" type="button">Save</button>';
   html += '</div>';
@@ -967,8 +988,9 @@ function saveSelectedDay() {
     })
     .then(function () {
       showToast("Saved " + formatDateStr(selectedDateStr));
-      return fetchSlotConfigs();
+      return Promise.all([fetchSlotConfigs(), fetchAvailableDates()]);
     })
+    .then(function () { if (selectedDateStr) renderDayDetail(); })
     .catch(function (err) { slotsError.textContent = err.message; })
     .finally(hideUpdateModal);
 }
