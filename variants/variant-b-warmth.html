@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lustiga Landet Booking Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS Custom Properties ===== */
+    :root {
+      /* Colors — Warm palette */
+      --color-primary: #2d8a4e;
+      --color-primary-hover: #246e3e;
+      --color-primary-light: #dcfce7;
+      --color-secondary: #f0fdf4;
+      --color-background: #fefce8;
+      --color-surface: #ffffff;
+      --color-border: #e5e7eb;
+      --color-text: #1c1917;
+      --color-text-secondary: #78716c;
+      --color-text-inverse: #ffffff;
+      --color-accent: #ea580c;
+      --color-accent-light: #fff7ed;
+      --color-danger: #dc2626;
+      --color-danger-hover: #b91c1c;
+      --color-danger-light: #fef2f2;
+      --color-warning: #d97706;
+      --color-warning-light: #fffbeb;
+      --color-info: #2563eb;
+      --color-info-light: #eff6ff;
+      --color-hover-row: #fefce8;
+      --color-focus-ring: rgba(45, 138, 78, 0.4);
+
+      /* Spacing */
+      --space-xs: 8px;
+      --space-sm: 12px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      /* Typography */
+      --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-size-small: 13px;
+      --font-size-base: 15px;
+      --font-size-h3: 17px;
+      --font-size-h2: 20px;
+      --font-size-h1: 26px;
+      --font-weight-normal: 500;
+      --font-weight-bold: 700;
+      --line-height: 1.6;
+
+      /* Border radius */
+      --radius-card: 12px;
+      --radius-input: 12px;
+      --radius-button: 20px;
+      --radius-badge: 999px;
+
+      /* Shadows */
+      --shadow-soft: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-medium: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
+      --shadow-large: 0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+
+      /* Transitions */
+      --transition: 200ms ease;
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: var(--font-size-base);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-family);
+      font-weight: var(--font-weight-normal);
+      color: var(--color-text);
+      background-color: var(--color-background);
+      line-height: var(--line-height);
+      min-height: 100vh;
+    }
+
+    /* ===== Focus styles ===== */
+    *:focus-visible {
+      outline: 3px solid var(--color-focus-ring);
+      outline-offset: 2px;
+    }
+
+    /* ===== Header ===== */
+    .app-header {
+      background: linear-gradient(135deg, var(--color-primary), #34a058);
+      color: var(--color-text-inverse);
+      padding: var(--space-lg) var(--space-xl);
+      border-radius: 0 0 var(--space-lg) var(--space-lg);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .app-header h1 {
+      font-size: var(--font-size-h1);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: -0.02em;
+    }
+
+    .app-header p {
+      opacity: 0.9;
+      font-size: var(--font-size-base);
+      margin-top: var(--space-xs);
+    }
+
+    /* ===== Navigation Tabs ===== */
+    .nav-tabs {
+      display: flex;
+      gap: var(--space-xs);
+      padding: var(--space-lg) var(--space-xl) 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .nav-tab {
+      padding: var(--space-sm) var(--space-lg);
+      border: none;
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-normal);
+      cursor: pointer;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+      transition: all var(--transition);
+      min-height: 44px;
+      min-width: 44px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-tab:hover {
+      color: var(--color-text);
+      background: var(--color-surface);
+    }
+
+    .nav-tab.active {
+      color: var(--color-primary);
+      font-weight: 600;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-medium);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== Main Content ===== */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-xl) var(--space-2xl);
+    }
+
+    .tab-panel {
+      display: none;
+      background: var(--color-surface);
+      border-radius: 0 var(--radius-card) var(--radius-card) var(--radius-card);
+      padding: var(--space-xl);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* ===== Password Gate ===== */
+    .password-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2xl);
+      text-align: center;
+    }
+
+    .password-gate .gate-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-lg);
+    }
+
+    .password-gate h2 {
+      font-size: var(--font-size-h2);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-xs);
+    }
+
+    .password-gate p {
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-lg);
+    }
+
+    .password-form {
+      display: flex;
+      gap: var(--space-sm);
+      align-items: stretch;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .password-form label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    .password-form input {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-input);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      transition: border-color var(--transition);
+      min-height: 44px;
+    }
+
+    .password-form input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
+    .password-error {
+      color: var(--color-danger);
+      font-size: var(--font-size-small);
+      margin-top: var(--space-sm);
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-lg);
+      border: none;
+      border-radius: var(--radius-button);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      min-height: 44px;
+      min-width: 44px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .btn-secondary {
+      background: var(--color-secondary);
+      color: var(--color-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-primary-light);
+    }
+
+    .btn-danger {
+      background: var(--color-danger-light);
+      color: var(--color-danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--color-danger);
+      color: var(--color-text-inverse);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: var(--color-secondary);
+      color: var(--color-text);
+    }
+
+    .btn-sm {
+      padding: var(--space-xs) var(--space-md);
+      font-size: var(--font-size-small);
+      min-height: 44px;
+    }
+
+    /* ===== Filter Bar ===== */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+      margin-bottom: var(--space-lg);
+    }
+
+    .filter-bar label {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    .filter-input {
+      padding: var(--space-sm) var(--space-md);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-input);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      transition: border-color var(--transition);
+      min-height: 44px;
+      min-width: 200px;
+      background: var(--color-surface);
+    }
+
+    .filter-input:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
+    /* ===== Stats Card ===== */
+    .stats-card {
+      display: inline-flex;
+      gap: var(--space-lg);
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--color-secondary);
+      border-radius: var(--radius-card);
+      margin-left: auto;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-value {
+      font-size: var(--font-size-h3);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary);
+    }
+
+    .stat-label {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+    }
+
+    /* ===== Table ===== */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-size-base);
+    }
+
+    .data-table thead {
+      background: var(--color-secondary);
+    }
+
+    .data-table th {
+      padding: var(--space-sm) var(--space-md);
+      text-align: left;
+      font-weight: 600;
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    .data-table td {
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr {
+      transition: background var(--transition);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--color-hover-row);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ===== Inline-editable selects ===== */
+    .inline-select {
+      padding: var(--space-xs) var(--space-sm);
+      border: 2px solid transparent;
+      border-radius: var(--radius-input);
+      font-family: var(--font-family);
+      font-size: var(--font-size-small);
+      background: transparent;
+      cursor: pointer;
+      transition: all var(--transition);
+      min-height: 44px;
+      min-width: 44px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 28px;
+    }
+
+    .inline-select:hover {
+      border-color: var(--color-border);
+      background-color: var(--color-surface);
+    }
+
+    .inline-select:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+      background-color: var(--color-surface);
+    }
+
+    /* ===== Status Badges ===== */
+    .badge {
+      display: inline-block;
+      padding: 4px var(--space-sm);
+      border-radius: var(--radius-badge);
+      font-size: var(--font-size-small);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-confirmed {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    .badge-pending {
+      background: var(--color-warning-light);
+      color: var(--color-warning);
+    }
+
+    .badge-cancelled {
+      background: var(--color-danger-light);
+      color: var(--color-danger);
+    }
+
+    .badge-completed {
+      background: var(--color-info-light);
+      color: var(--color-info);
+    }
+
+    /* ===== Pagination ===== */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      margin-top: var(--space-lg);
+    }
+
+    .pagination-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      min-width: 44px;
+      padding: var(--space-xs) var(--space-sm);
+      border: none;
+      border-radius: var(--radius-card);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-normal);
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: var(--color-secondary);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .pagination-btn.active {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      font-weight: 600;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .pagination-info {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-small);
+      padding: 0 var(--space-sm);
+    }
+
+    /* ===== Email Templates Section ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .section-header h2 {
+      font-size: var(--font-size-h2);
+      font-weight: var(--font-weight-bold);
+    }
+
+    .template-grid {
+      display: grid;
+      gap: var(--space-md);
+    }
+
+    .template-card {
+      padding: var(--space-lg);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-soft);
+      transition: all var(--transition);
+      background: var(--color-surface);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .template-card:hover {
+      box-shadow: var(--shadow-medium);
+    }
+
+    .template-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .template-card-title {
+      font-size: var(--font-size-h3);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .template-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+    }
+
+    .template-card-actions {
+      display: flex;
+      gap: var(--space-xs);
+      flex-shrink: 0;
+    }
+
+    .template-type-badge {
+      display: inline-block;
+      padding: 2px var(--space-xs);
+      border-radius: var(--radius-badge);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--color-accent-light);
+      color: var(--color-accent);
+    }
+
+    .active-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: var(--font-size-small);
+    }
+
+    .active-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .active-dot.inactive {
+      background: var(--color-border);
+    }
+
+    /* ===== Template Editor ===== */
+    .template-editor {
+      display: none;
+      margin-top: var(--space-lg);
+      padding: var(--space-xl);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-medium);
+      background: var(--color-surface);
+    }
+
+    .template-editor.open {
+      display: block;
+    }
+
+    .template-editor h3 {
+      font-size: var(--font-size-h3);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-lg);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: var(--font-size-small);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: var(--space-sm) var(--space-md);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-input);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      transition: border-color var(--transition);
+      min-height: 44px;
+      background: var(--color-surface);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 160px;
+      line-height: 1.6;
+    }
+
+    .checkbox-group {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      min-height: auto;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      cursor: pointer;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+      justify-content: flex-end;
+    }
+
+    /* ===== Placeholders Reference ===== */
+    .placeholders-section {
+      margin-top: var(--space-lg);
+    }
+
+    .placeholders-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-md);
+      border: none;
+      background: var(--color-secondary);
+      border-radius: var(--radius-card);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--color-primary);
+      cursor: pointer;
+      transition: all var(--transition);
+      min-height: 44px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .placeholders-toggle:hover {
+      background: var(--color-primary-light);
+    }
+
+    .placeholders-toggle .arrow {
+      transition: transform var(--transition);
+      font-size: 12px;
+    }
+
+    .placeholders-toggle .arrow.rotated {
+      transform: rotate(90deg);
+    }
+
+    .placeholders-content {
+      display: none;
+      margin-top: var(--space-sm);
+      padding: var(--space-md);
+      background: var(--color-secondary);
+      border-radius: var(--radius-card);
+    }
+
+    .placeholders-content.open {
+      display: block;
+    }
+
+    .placeholder-item {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-sm);
+      padding: var(--space-xs) 0;
+    }
+
+    .placeholder-item:not(:last-child) {
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .placeholder-key {
+      font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+      font-size: var(--font-size-small);
+      background: var(--color-surface);
+      padding: 2px var(--space-xs);
+      border-radius: 6px;
+      color: var(--color-accent);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .placeholder-desc {
+      font-size: var(--font-size-small);
+      color: var(--color-text-secondary);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .app-header {
+        padding: var(--space-md) var(--space-md);
+      }
+
+      .nav-tabs {
+        padding: var(--space-md) var(--space-md) 0;
+      }
+
+      .main-content {
+        padding: 0 var(--space-md) var(--space-xl);
+      }
+
+      .tab-panel {
+        padding: var(--space-md);
+      }
+
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .stats-card {
+        margin-left: 0;
+        justify-content: center;
+      }
+
+      .filter-input {
+        min-width: 100%;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-header {
+        flex-direction: column;
+        gap: var(--space-sm);
+        align-items: stretch;
+      }
+
+      .template-card {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .template-card-actions {
+        justify-content: flex-end;
+      }
+
+      .password-form {
+        flex-direction: column;
+      }
+    }
+
+    /* ===== Toast / Alert ===== */
+    .toast {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-large);
+      font-weight: 600;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 300ms ease;
+      z-index: 1000;
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ===== Empty state ===== */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-2xl);
+      color: var(--color-text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <h1>Lustiga Landet Booking Admin</h1>
+    <p>Hantera bokningar och e-postmallar</p>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs" role="tablist">
+    <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="panel-bookings" id="tab-bookings" onclick="switchTab('bookings')">
+      Bokningar
+    </button>
+    <button class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-templates" id="tab-templates" onclick="switchTab('templates')">
+      E-postmallar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ===== Bookings Panel ===== -->
+    <div class="tab-panel active" role="tabpanel" id="panel-bookings" aria-labelledby="tab-bookings">
+
+      <!-- Password Gate -->
+      <div id="password-gate" class="password-gate">
+        <div class="gate-icon" aria-hidden="true">&#128274;</div>
+        <h2>Ange l&ouml;senord</h2>
+        <p>Skriv in administrat&ouml;rsl&ouml;senordet f&ouml;r att visa bokningar.</p>
+        <div class="password-form" role="form">
+          <label for="password-input">L&ouml;senord</label>
+          <input type="password" id="password-input" placeholder="L&ouml;senord..." aria-label="Administrat&ouml;rsl&ouml;senord" autocomplete="current-password">
+          <button class="btn btn-primary" onclick="checkPassword()" aria-label="Logga in">Logga in</button>
+        </div>
+        <div id="password-error" class="password-error" role="alert" aria-live="polite"></div>
+      </div>
+
+      <!-- Bookings Content (hidden until password entered) -->
+      <div id="bookings-content" style="display:none;">
+
+        <!-- Filter bar + Stats -->
+        <div class="filter-bar">
+          <label for="filter-input">S&ouml;k:</label>
+          <input type="text" id="filter-input" class="filter-input" placeholder="S&ouml;k p&aring; namn, datum, status..." aria-label="Filtrera bokningar" oninput="filterBookings()">
+
+          <div class="stats-card" aria-live="polite">
+            <div class="stat-item">
+              <span class="stat-value" id="stat-total">15</span>
+              <span class="stat-label">Totalt</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value" id="stat-filtered">15</span>
+              <span class="stat-label">Visade</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table class="data-table" aria-label="Bokningar">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Namn</th>
+                <th scope="col">E-post</th>
+                <th scope="col">Datum</th>
+                <th scope="col">Tid</th>
+                <th scope="col">Vuxna</th>
+                <th scope="col">Barn</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-tbody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination-controls" role="navigation" aria-label="Sidnavigering">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Email Templates Panel ===== -->
+    <div class="tab-panel" role="tabpanel" id="panel-templates" aria-labelledby="tab-templates">
+
+      <div class="section-header">
+        <h2>E-postmallar</h2>
+        <button class="btn btn-primary" onclick="openTemplateEditor(null)" aria-label="Skapa ny e-postmall">
+          + Ny mall
+        </button>
+      </div>
+
+      <!-- Template Cards -->
+      <div class="template-grid" id="template-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Template Editor -->
+      <div class="template-editor" id="template-editor" role="region" aria-label="Mallredigerare">
+        <h3 id="editor-title">Ny e-postmall</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tpl-id">Mall-ID</label>
+            <input type="text" id="tpl-id" placeholder="t.ex. booking-confirmation">
+          </div>
+          <div class="form-group">
+            <label for="tpl-type">Typ</label>
+            <select id="tpl-type" aria-label="Malltyp">
+              <option value="transactional">Transaktionell</option>
+              <option value="marketing">Marknadsf&ouml;ring</option>
+              <option value="reminder">P&aring;minnelse</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="tpl-name">Namn</label>
+            <input type="text" id="tpl-name" placeholder="Mallnamn">
+          </div>
+          <div class="form-group">
+            <label for="tpl-subject">&Auml;mne</label>
+            <input type="text" id="tpl-subject" placeholder="E-post&auml;mne">
+          </div>
+          <div class="form-group full-width">
+            <label for="tpl-body">Inneh&aring;ll</label>
+            <textarea id="tpl-body" placeholder="Skriv mallinneh&aring;llet h&auml;r. Anv&auml;nd {{platsh&aring;llare}} f&ouml;r dynamiskt inneh&aring;ll."></textarea>
+          </div>
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="tpl-active" checked>
+            <label for="tpl-active">Aktiv</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="closeTemplateEditor()">Avbryt</button>
+          <button class="btn btn-primary" onclick="saveTemplate()">Spara mall</button>
+        </div>
+      </div>
+
+      <!-- Placeholders Reference -->
+      <div class="placeholders-section">
+        <button class="placeholders-toggle" onclick="togglePlaceholders()" aria-expanded="false" aria-controls="placeholders-content">
+          <span class="arrow" id="placeholders-arrow">&#9654;</span>
+          Platsh&aring;llarreferens
+        </button>
+        <div class="placeholders-content" id="placeholders-content" role="region" aria-label="Platsh&aring;llarreferens">
+          <div class="placeholder-item">
+            <span class="placeholder-key">{{guest_name}}</span>
+            <span class="placeholder-desc">G&auml;stens fullst&auml;ndiga namn</span>
+          </div>
+          <div class="placeholder-item">
+            <span class="placeholder-key">{{booking_date}}</span>
+            <span class="placeholder-desc">Bokningsdatum (t.ex. 15 juni 2025)</span>
+          </div>
+          <div class="placeholder-item">
+            <span class="placeholder-key">{{booking_time}}</span>
+            <span class="placeholder-desc">Bokningstid (t.ex. 10:00)</span>
+          </div>
+          <div class="placeholder-item">
+            <span class="placeholder-key">{{total_guests}}</span>
+            <span class="placeholder-desc">Totalt antal g&auml;ster (vuxna + barn)</span>
+          </div>
+          <div class="placeholder-item">
+            <span class="placeholder-key">{{booking_id}}</span>
+            <span class="placeholder-desc">Unikt boknings-ID f&ouml;r referens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+  <script>
+    /* ===================================================================
+       DATA — Mock bookings & templates
+       =================================================================== */
+
+    const bookings = [
+      { id: 'BK-1001', name: 'Anna Svensson',     email: 'anna.svensson@mail.se',     date: '2025-06-15', time: '10:00', adults: 2, kids: 3, status: 'confirmed' },
+      { id: 'BK-1002', name: 'Erik Lindgren',      email: 'erik.lindgren@gmail.com',    date: '2025-06-15', time: '11:00', adults: 4, kids: 2, status: 'confirmed' },
+      { id: 'BK-1003', name: 'Maria Johansson',    email: 'maria.j@outlook.com',        date: '2025-06-16', time: '10:00', adults: 2, kids: 1, status: 'pending' },
+      { id: 'BK-1004', name: 'Lars Eriksson',      email: 'lars.e@telia.se',            date: '2025-06-16', time: '13:00', adults: 1, kids: 0, status: 'cancelled' },
+      { id: 'BK-1005', name: 'Sofia Andersson',    email: 'sofia.a@hotmail.com',        date: '2025-06-17', time: '10:00', adults: 3, kids: 4, status: 'confirmed' },
+      { id: 'BK-1006', name: 'Gustav Nilsson',     email: 'gustav.n@gmail.com',         date: '2025-06-17', time: '14:00', adults: 2, kids: 2, status: 'pending' },
+      { id: 'BK-1007', name: 'Hanna Karlsson',     email: 'hanna.k@yahoo.se',           date: '2025-06-18', time: '11:00', adults: 2, kids: 1, status: 'confirmed' },
+      { id: 'BK-1008', name: 'Oscar Pettersson',   email: 'oscar.p@mail.se',            date: '2025-06-18', time: '10:00', adults: 5, kids: 3, status: 'completed' },
+      { id: 'BK-1009', name: 'Elin Gustafsson',    email: 'elin.g@gmail.com',           date: '2025-06-19', time: '13:00', adults: 2, kids: 2, status: 'confirmed' },
+      { id: 'BK-1010', name: 'Fredrik Olsson',     email: 'fredrik.o@telia.se',         date: '2025-06-19', time: '10:00', adults: 1, kids: 0, status: 'cancelled' },
+      { id: 'BK-1011', name: 'Maja Berg',          email: 'maja.berg@outlook.com',      date: '2025-06-20', time: '11:00', adults: 2, kids: 5, status: 'pending' },
+      { id: 'BK-1012', name: 'Viktor Holm',        email: 'viktor.h@gmail.com',         date: '2025-06-20', time: '14:00', adults: 3, kids: 1, status: 'confirmed' },
+      { id: 'BK-1013', name: 'Ida Lundqvist',      email: 'ida.l@hotmail.com',          date: '2025-06-21', time: '10:00', adults: 2, kids: 2, status: 'completed' },
+      { id: 'BK-1014', name: 'Alexander Sj\u00f6berg', email: 'alex.s@mail.se',         date: '2025-06-21', time: '13:00', adults: 4, kids: 3, status: 'confirmed' },
+      { id: 'BK-1015', name: 'Klara \u00d6stlund',     email: 'klara.o@gmail.com',      date: '2025-06-22', time: '11:00', adults: 2, kids: 0, status: 'pending' },
+    ];
+
+    let templates = [
+      {
+        templateId: 'booking-confirmation',
+        type: 'transactional',
+        name: 'Bokningsbekr\u00e4ftelse',
+        subject: 'Din bokning \u00e4r bekr\u00e4ftad \u2014 {{booking_date}}',
+        body: 'Hej {{guest_name}},\n\nTack f\u00f6r din bokning p\u00e5 Lustiga Landet!\n\nDatum: {{booking_date}}\nTid: {{booking_time}}\nAntal g\u00e4ster: {{total_guests}}\nBoknings-ID: {{booking_id}}\n\nVi ser fram emot ditt bes\u00f6k!\n\nV\u00e4nliga h\u00e4lsningar,\nLustiga Landet',
+        active: true
+      },
+      {
+        templateId: 'booking-reminder',
+        type: 'reminder',
+        name: 'P\u00e5minnelse inf\u00f6r bes\u00f6k',
+        subject: 'P\u00e5minnelse: Ditt bes\u00f6k p\u00e5 {{booking_date}}',
+        body: 'Hej {{guest_name}},\n\nDetta \u00e4r en p\u00e5minnelse om din bokning p\u00e5 Lustiga Landet.\n\nDatum: {{booking_date}}\nTid: {{booking_time}}\nBoknings-ID: {{booking_id}}\n\nGl\u00f6m inte att ta med bekv\u00e4ma skor och kl\u00e4der f\u00f6r utomhusaktiviteter!\n\nVi ses snart!\nLustiga Landet',
+        active: true
+      },
+      {
+        templateId: 'booking-cancellation',
+        type: 'transactional',
+        name: 'Avbokningsbekr\u00e4ftelse',
+        subject: 'Din bokning har avbokats \u2014 {{booking_id}}',
+        body: 'Hej {{guest_name}},\n\nDin bokning ({{booking_id}}) f\u00f6r {{booking_date}} har avbokats.\n\nOm du vill boka om, bes\u00f6k v\u00e5r hemsida eller kontakta oss.\n\nVi hoppas att se dig en annan g\u00e5ng!\n\nLustiga Landet',
+        active: false
+      }
+    ];
+
+    /* ===================================================================
+       STATE
+       =================================================================== */
+
+    let currentPage = 1;
+    const pageSize = 10;
+    let filteredBookings = [...bookings];
+    let editingTemplateIndex = null; // null = new, number = editing index
+
+    /* ===================================================================
+       TAB SWITCHING
+       =================================================================== */
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+
+      const tabBtn = document.getElementById('tab-' + tab);
+      const panel = document.getElementById('panel-' + tab);
+      tabBtn.classList.add('active');
+      tabBtn.setAttribute('aria-selected', 'true');
+      panel.classList.add('active');
+    }
+
+    /* ===================================================================
+       PASSWORD GATE
+       =================================================================== */
+
+    function checkPassword() {
+      const input = document.getElementById('password-input');
+      const error = document.getElementById('password-error');
+      // Accept "admin" or "lustiga" as valid passwords
+      if (input.value === 'admin' || input.value === 'lustiga') {
+        document.getElementById('password-gate').style.display = 'none';
+        document.getElementById('bookings-content').style.display = 'block';
+        renderBookings();
+      } else {
+        error.textContent = 'Fel l\u00f6senord. F\u00f6rs\u00f6k igen.';
+        input.focus();
+        input.select();
+      }
+    }
+
+    // Allow Enter key for password
+    document.getElementById('password-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    /* ===================================================================
+       BOOKINGS TABLE
+       =================================================================== */
+
+    const dateOptions = [
+      '2025-06-15', '2025-06-16', '2025-06-17', '2025-06-18',
+      '2025-06-19', '2025-06-20', '2025-06-21', '2025-06-22'
+    ];
+    const timeOptions = ['10:00', '11:00', '13:00', '14:00'];
+    const statusOptions = ['confirmed', 'pending', 'cancelled', 'completed'];
+    const statusLabels = {
+      confirmed: 'Bekr\u00e4ftad',
+      pending: 'V\u00e4ntar',
+      cancelled: 'Avbokad',
+      completed: 'Genomf\u00f6rd'
+    };
+
+    function filterBookings() {
+      const query = document.getElementById('filter-input').value.toLowerCase().trim();
+      if (!query) {
+        filteredBookings = [...bookings];
+      } else {
+        filteredBookings = bookings.filter(b => {
+          return b.name.toLowerCase().includes(query)
+            || b.email.toLowerCase().includes(query)
+            || b.date.includes(query)
+            || b.id.toLowerCase().includes(query)
+            || statusLabels[b.status].toLowerCase().includes(query)
+            || b.status.toLowerCase().includes(query);
+        });
+      }
+      currentPage = 1;
+      renderBookings();
+    }
+
+    function renderBookings() {
+      const tbody = document.getElementById('bookings-tbody');
+      const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = filteredBookings.slice(start, start + pageSize);
+
+      // Update stats
+      document.getElementById('stat-total').textContent = bookings.length;
+      document.getElementById('stat-filtered').textContent = filteredBookings.length;
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">&#128269;</div><p>Inga bokningar matchar din s\u00f6kning.</p></div></td></tr>';
+        renderPagination(totalPages);
+        return;
+      }
+
+      tbody.innerHTML = pageItems.map((b, idx) => {
+        const globalIdx = start + idx;
+        return `<tr>
+          <td><strong>${escHtml(b.id)}</strong></td>
+          <td>${escHtml(b.name)}</td>
+          <td>${escHtml(b.email)}</td>
+          <td>
+            <select class="inline-select" aria-label="Datum f\u00f6r ${escAttr(b.name)}" onchange="updateBooking(${globalIdx}, 'date', this.value)">
+              ${dateOptions.map(d => `<option value="${d}" ${d === b.date ? 'selected' : ''}>${d}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="inline-select" aria-label="Tid f\u00f6r ${escAttr(b.name)}" onchange="updateBooking(${globalIdx}, 'time', this.value)">
+              ${timeOptions.map(t => `<option value="${t}" ${t === b.time ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="inline-select" aria-label="Vuxna f\u00f6r ${escAttr(b.name)}" onchange="updateBooking(${globalIdx}, 'adults', parseInt(this.value))">
+              ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${n === b.adults ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="inline-select" aria-label="Barn f\u00f6r ${escAttr(b.name)}" onchange="updateBooking(${globalIdx}, 'kids', parseInt(this.value))">
+              ${[0,1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${n === b.kids ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+          </td>
+          <td>
+            <select class="inline-select badge-${b.status}" aria-label="Status f\u00f6r ${escAttr(b.name)}" onchange="updateBooking(${globalIdx}, 'status', this.value)" style="font-weight:600; ${statusSelectStyle(b.status)}">
+              ${statusOptions.map(s => `<option value="${s}" ${s === b.status ? 'selected' : ''}>${statusLabels[s]}</option>`).join('')}
+            </select>
+          </td>
+        </tr>`;
+      }).join('');
+
+      renderPagination(totalPages);
+    }
+
+    function statusSelectStyle(status) {
+      const colors = {
+        confirmed: 'color: #2d8a4e; background: #dcfce7;',
+        pending: 'color: #d97706; background: #fffbeb;',
+        cancelled: 'color: #dc2626; background: #fef2f2;',
+        completed: 'color: #2563eb; background: #eff6ff;'
+      };
+      return colors[status] || '';
+    }
+
+    function updateBooking(globalIdx, field, value) {
+      // Find the actual booking in the original array
+      const filtered = filteredBookings[globalIdx];
+      if (!filtered) return;
+      const realIdx = bookings.findIndex(b => b.id === filtered.id);
+      if (realIdx === -1) return;
+      bookings[realIdx][field] = value;
+      // Also update in filteredBookings
+      filteredBookings[globalIdx][field] = value;
+      renderBookings();
+      showToast(`${bookings[realIdx].name}: ${field} uppdaterat`);
+    }
+
+    function renderPagination(totalPages) {
+      const container = document.getElementById('pagination-controls');
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      html += `<button class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})" aria-label="F\u00f6reg\u00e5ende sida">&#8592;</button>`;
+
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})" aria-label="Sida ${i}" ${i === currentPage ? 'aria-current="page"' : ''}>${i}</button>`;
+      }
+
+      html += `<button class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})" aria-label="N\u00e4sta sida">&#8594;</button>`;
+
+      container.innerHTML = html;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderBookings();
+    }
+
+    /* ===================================================================
+       EMAIL TEMPLATES
+       =================================================================== */
+
+    function renderTemplates() {
+      const grid = document.getElementById('template-grid');
+      if (templates.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128231;</div><p>Inga e-postmallar \u00e4nnu. Skapa en ny mall f\u00f6r att komma ig\u00e5ng.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = templates.map((t, idx) => {
+        const typeLabel = { transactional: 'Transaktionell', marketing: 'Marknadsf\u00f6ring', reminder: 'P\u00e5minnelse' }[t.type] || t.type;
+        return `<div class="template-card">
+          <div class="template-card-body">
+            <div class="template-card-title">${escHtml(t.name)}</div>
+            <div class="template-card-meta">
+              <span class="template-type-badge">${escHtml(typeLabel)}</span>
+              <span>${escHtml(t.templateId)}</span>
+              <span class="active-indicator">
+                <span class="active-dot ${t.active ? '' : 'inactive'}"></span>
+                ${t.active ? 'Aktiv' : 'Inaktiv'}
+              </span>
+            </div>
+          </div>
+          <div class="template-card-actions">
+            <button class="btn btn-secondary btn-sm" onclick="openTemplateEditor(${idx})" aria-label="Redigera ${escAttr(t.name)}">Redigera</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${idx})" aria-label="Ta bort ${escAttr(t.name)}">Ta bort</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function openTemplateEditor(index) {
+      editingTemplateIndex = index;
+      const editor = document.getElementById('template-editor');
+      const title = document.getElementById('editor-title');
+
+      if (index !== null && index !== undefined) {
+        const t = templates[index];
+        title.textContent = 'Redigera mall';
+        document.getElementById('tpl-id').value = t.templateId;
+        document.getElementById('tpl-type').value = t.type;
+        document.getElementById('tpl-name').value = t.name;
+        document.getElementById('tpl-subject').value = t.subject;
+        document.getElementById('tpl-body').value = t.body;
+        document.getElementById('tpl-active').checked = t.active;
+      } else {
+        title.textContent = 'Ny e-postmall';
+        document.getElementById('tpl-id').value = '';
+        document.getElementById('tpl-type').value = 'transactional';
+        document.getElementById('tpl-name').value = '';
+        document.getElementById('tpl-subject').value = '';
+        document.getElementById('tpl-body').value = '';
+        document.getElementById('tpl-active').checked = true;
+      }
+
+      editor.classList.add('open');
+      editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      document.getElementById('tpl-id').focus();
+    }
+
+    function closeTemplateEditor() {
+      document.getElementById('template-editor').classList.remove('open');
+      editingTemplateIndex = null;
+    }
+
+    function saveTemplate() {
+      const data = {
+        templateId: document.getElementById('tpl-id').value.trim(),
+        type: document.getElementById('tpl-type').value,
+        name: document.getElementById('tpl-name').value.trim(),
+        subject: document.getElementById('tpl-subject').value.trim(),
+        body: document.getElementById('tpl-body').value,
+        active: document.getElementById('tpl-active').checked
+      };
+
+      // Validation
+      if (!data.templateId || !data.name || !data.subject) {
+        showToast('Fyll i alla obligatoriska f\u00e4lt (ID, Namn, \u00c4mne)');
+        return;
+      }
+
+      if (editingTemplateIndex !== null) {
+        templates[editingTemplateIndex] = data;
+        showToast(`Mallen "${data.name}" har uppdaterats`);
+      } else {
+        templates.push(data);
+        showToast(`Mallen "${data.name}" har skapats`);
+      }
+
+      closeTemplateEditor();
+      renderTemplates();
+    }
+
+    function deleteTemplate(index) {
+      const name = templates[index].name;
+      if (confirm(`\u00c4r du s\u00e4ker p\u00e5 att du vill ta bort "${name}"?`)) {
+        templates.splice(index, 1);
+        renderTemplates();
+        closeTemplateEditor();
+        showToast(`Mallen "${name}" har tagits bort`);
+      }
+    }
+
+    /* ===================================================================
+       PLACEHOLDERS TOGGLE
+       =================================================================== */
+
+    function togglePlaceholders() {
+      const content = document.getElementById('placeholders-content');
+      const arrow = document.getElementById('placeholders-arrow');
+      const toggle = content.previousElementSibling;
+
+      const isOpen = content.classList.contains('open');
+      content.classList.toggle('open');
+      arrow.classList.toggle('rotated');
+      toggle.setAttribute('aria-expanded', !isOpen);
+    }
+
+    /* ===================================================================
+       TOAST NOTIFICATION
+       =================================================================== */
+
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('visible');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 3000);
+    }
+
+    /* ===================================================================
+       UTILITY
+       =================================================================== */
+
+    function escHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function escAttr(str) {
+      return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /* ===================================================================
+       INIT
+       =================================================================== */
+
+    renderTemplates();
+  </script>
+</body>
+</html>

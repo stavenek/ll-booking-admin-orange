@@ -7,385 +7,145 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <label for="pwd">Admin&nbsp;password:</label>
-    <input type="password" id="pwd" placeholder="Enter password" autocomplete="current-password" />
-    <button id="setPwdBtn">Load bookings</button>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-top">
+        <h1 class="app-title">
+          <span>Lustiga Landet</span>
+          Booking Admin
+        </h1>
+        <div class="password-form" id="passwordForm">
+          <label for="pwd">Admin password:</label>
+          <input type="password" id="pwd" placeholder="Enter password" autocomplete="current-password" />
+          <button class="btn-load" id="setPwdBtn" type="button">Login</button>
+        </div>
+      </div>
+      <nav class="nav-tabs" id="navTabs">
+        <button class="nav-tab active" data-tab="bookings" type="button">Bookings</button>
+        <button class="nav-tab" data-tab="slots" type="button">Slots &amp; Opening Hours</button>
+        <button class="nav-tab" data-tab="templates" type="button">Email Templates</button>
+      </nav>
+    </div>
   </header>
 
-  <div id="filterContainer" style="display: none;">
-    <input type="text" id="filterInput" placeholder="Filter bookings…" />
+  <!-- Main content -->
+  <div class="main-content">
+
+    <!-- Bookings panel -->
+    <div class="section-panel" id="bookingsPanel">
+      <div class="error-message" id="error" role="alert"></div>
+      <div class="bookings-toolbar" id="filterContainer">
+        <input type="text" class="filter-input" id="filterInput" placeholder="Filter bookings by name, email, date, status..." aria-label="Filter bookings" />
+        <div class="stats-counter" id="statsCounter" aria-live="polite">
+          <div class="stat-box" id="statTotal">
+            <span class="stat-number" id="totalBookings">0</span>
+            <span class="stat-label">total</span>
+          </div>
+          <div class="stat-box" id="statFiltered">
+            <span class="stat-number" id="filteredBookings">0</span>
+            <span class="stat-label">shown</span>
+          </div>
+        </div>
+      </div>
+      <div id="tableContainer"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Slots & Opening Hours panel -->
+    <div class="section-panel" id="slotsPanel">
+      <h2 class="section-heading">Slots &amp; Opening Hours</h2>
+      <div class="error-message" id="slotsError" role="alert"></div>
+      <div class="slots-layout">
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button class="cal-nav" id="calPrevBtn" type="button" aria-label="Previous month">&lsaquo;</button>
+            <div class="cal-title" id="calTitle"></div>
+            <button class="cal-nav" id="calNextBtn" type="button" aria-label="Next month">&rsaquo;</button>
+          </div>
+          <div class="calendar-weekdays">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="calendar-legend">
+            <span class="legend-dot legend-open"></span>Open
+            <span class="legend-dot legend-closed"></span>Closed
+            <span class="legend-dot legend-unset"></span>Not configured
+          </div>
+        </div>
+        <div class="day-detail" id="dayDetail">
+          <div class="empty-state">Click a day to edit.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Templates panel -->
+    <div class="section-panel" id="templatesPanel">
+      <h2 class="section-heading">Email Templates</h2>
+      <div class="error-message" id="emailError" role="alert"></div>
+      <div id="templatesList"></div>
+      <button class="btn-add-template" id="addTemplateBtn" type="button">+ New template</button>
+    </div>
+
   </div>
 
-  <div id="error" class="error"></div>
-
-  <div id="tableContainer"></div>
-  <div class="pagination" id="pagination"></div>
-  <div id="bookingStats" style="position:fixed;top:10px;right:20px;font-size:1.1em;background:#fff3;padding:0.5em 1.2em;border-radius:8px;box-shadow:0 2px 8px #0001;z-index:10000;">
-    <span id="totalBookings">0</span> / <span id="filteredBookings">0</span>
+  <!-- Update modal (loading spinner) -->
+  <div class="modal-overlay" id="updateModal" aria-live="assertive">
+    <div class="update-modal-content">Updating...</div>
   </div>
 
-  <script>
-    const API_BASE =
-      //"https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
-      "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod//llb/v1";
-    let adminPwd = "";
-    let allBookings = [];
-    let filteredBookings = [];
-    let currentPage = 1;
-    const PAGE_SIZE = 10;
+  <!-- Template editor modal -->
+  <div class="modal-overlay" id="editorModal">
+    <div class="editor-modal-content editor-modal-wide">
+      <div class="editor-modal-header">
+        <h3 class="editor-title" id="editorTitle">New template</h3>
+        <button class="btn-modal-close" id="editorCloseBtn" type="button" aria-label="Close editor">&times;</button>
+      </div>
+      <div class="error-message" id="editorError" role="alert"></div>
+      <div class="editor-body">
+        <div class="template-form">
+          <div class="form-field">
+            <label for="tplType">Type</label>
+            <select id="tplType">
+              <option value="">-- Select type --</option>
+              <option value="booking-confirmation">booking-confirmation</option>
+              <option value="booking-cancellation">booking-cancellation</option>
+              <option value="booking-reminder">booking-reminder</option>
+              <option value="booking-update">booking-update</option>
+              <option value="checkin-confirmation">checkin-confirmation</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="tplName">Name</label>
+            <input type="text" id="tplName" placeholder="Human-readable name" />
+          </div>
+          <div class="form-field">
+            <label for="tplSubject">Subject</label>
+            <input type="text" id="tplSubject" placeholder="Email subject (supports {{placeholders}})" />
+          </div>
+          <div class="form-field">
+            <label for="tplBody">Body</label>
+            <textarea id="tplBody" rows="10" placeholder="Email body (supports {{placeholders}})"></textarea>
+          </div>
+          <div class="form-field checkbox-field">
+            <input type="checkbox" id="tplActive" />
+            <label for="tplActive">Active</label>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" id="saveTemplateBtn" type="button">Save</button>
+            <button class="btn-cancel" id="cancelTemplateBtn" type="button">Cancel</button>
+          </div>
+        </div>
+        <div class="editor-sidebar" id="editorSidebar">
+          <div class="sidebar-title">Placeholders</div>
+          <p class="sidebar-hint">Click to insert at cursor</p>
+          <div class="placeholder-list" id="placeholderList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    // Elements
-    const pwdInput = document.getElementById("pwd");
-    const setPwdBtn = document.getElementById("setPwdBtn");
-    const filterContainer = document.getElementById("filterContainer");
-    const filterInput = document.getElementById("filterInput");
-    const errorDiv = document.getElementById("error");
-    const tableContainer = document.getElementById("tableContainer");
-    const paginationDiv = document.getElementById("pagination");
-    const bookingStats = document.getElementById("bookingStats");
-    const totalBookingsSpan = document.getElementById("totalBookings");
-    const filteredBookingsSpan = document.getElementById("filteredBookings");
-
-    setPwdBtn.addEventListener("click", () => {
-      adminPwd = pwdInput.value.trim();
-      if (!adminPwd) {
-        alert("Please enter the admin password.");
-        return;
-      }
-      filterInput.value = "";
-      fetchBookings();
-    });
-
-    pwdInput.addEventListener("keydown", (evt) => {
-      if (evt.key === "Enter") {
-        setPwdBtn.click();
-      }
-    });
-
-    filterInput.addEventListener("input", (evt) => {
-      const term = evt.target.value.toLowerCase();
-      filterBookings(term);
-      currentPage = 1;
-      renderTable();
-      renderPagination();
-    });
-
-    function fetchBookings() {
-      errorDiv.textContent = "";
-      filterContainer.style.display = "none";
-      tableContainer.innerHTML = "Loading…";
-      paginationDiv.innerHTML = "";
-
-      // Fetch available dates first, then bookings
-      fetchAvailableDates()
-        .then(() => {
-          return fetch(`${API_BASE}/bookings?admin=${encodeURIComponent(adminPwd)}`);
-        })
-        .then((res) => {
-          if (!res.ok) {
-            throw new Error("Failed to fetch bookings – check password?");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          allBookings = Array.isArray(data) ? data : [];
-          filteredBookings = allBookings;
-          filterContainer.style.display = "block";
-          currentPage = 1;
-          renderTable();
-          renderPagination();
-          updateBookingStats();
-        })
-        .catch((err) => {
-          tableContainer.innerHTML = "";
-          errorDiv.textContent = err.message;
-        });
-    }
-
-    let availableDates = [];
-
-    function fetchAvailableDates() {
-      // Replace with your actual endpoint for available dates
-      const url = `${API_BASE}/slots`;
-      return fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch available dates');
-          return res.json();
-        })
-        .then(data => {
-          // Extract unique dateStr values that are open and available
-          const dateSet = new Set();
-          data.forEach(slot => {
-            if (slot.isOpen && slot.isAvailable) {
-              dateSet.add(slot.dateStr);
-            }
-          });
-          availableDates = Array.from(dateSet).sort();
-        });
-    }
-
-    // Call fetchAvailableDates on page load, then fetchBookings
-    //fetchAvailableDates().then(fetchBookings).catch(err => {
-    //  errorDiv.textContent = err.message;
-    //});
-
-    function filterBookings(term) {
-      if (!term) {
-        filteredBookings = allBookings;
-        return;
-      }
-      filteredBookings = allBookings.filter((b) => {
-        return Object.values(b).some((v) =>
-          String(v).toLowerCase().includes(term)
-        );
-      });
-      updateBookingStats();
-    }
-
-    function renderTable() {
-      tableContainer.innerHTML = "";
-      if (filteredBookings.length === 0) {
-        tableContainer.textContent = "No bookings found.";
-        return;
-      }
-
-      // Always sort by dateStr ascending before rendering
-      const sortedBookings = [...filteredBookings].sort((a, b) => {
-        // Try to parse as date, fallback to string compare
-        const da = Date.parse(a.dateStr);
-        const db = Date.parse(b.dateStr);
-        if (!isNaN(da) && !isNaN(db)) return da - db;
-        return a.dateStr.localeCompare(b.dateStr);
-      });
-
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
-
-      const headers = [
-        "Date",
-        "Time",
-        "Name",
-        "Adults",
-        "Kids",
-        "Email",
-        "Status",
-        "Created",
-        "ID"
-      ];
-
-      let html = "<table><thead><tr>";
-      headers.forEach((h) => (html += `<th>${h}</th>`));
-      html += "</tr></thead><tbody>";
-
-      pageItems.forEach((b, idx) => {
-        // Guard: ensure status is a valid string
-        const validStatuses = ['NEW', 'REMOVED', 'CHECKED_IN'];
-        let status = typeof b.status === 'string' && validStatuses.includes(b.status) ? b.status : 'NEW';
-        // Ensure the booking's dateStr is in the dropdown options
-        let dateOptions = [...availableDates];
-        if (b.dateStr && !dateOptions.includes(b.dateStr)) {
-          dateOptions.push(b.dateStr);
-          dateOptions.sort();
-        }
-        html +=
-          `<tr>` +
-          `<td>` +
-            `<select data-idx="${start + idx}" class="date-select">` +
-              dateOptions.map(dateStr => `<option value="${dateStr}" ${b.dateStr === dateStr ? 'selected' : ''}>${dateStr}</option>`).join('') +
-            `</select>` +
-          `</td>` +
-          `<td>` +
-            `<select data-idx="${start + idx}" class="time-select">
-              <option value="10:00" ${b.timeStr === '10:00' ? 'selected' : ''}>10:00</option>
-              <option value="11:00" ${b.timeStr === '11:00' ? 'selected' : ''}>11:00</option>
-              <option value="12:00" ${b.timeStr === '12:00' ? 'selected' : ''}>12:00</option>
-              <option value="13:00" ${b.timeStr === '13:00' ? 'selected' : ''}>13:00</option>
-            </select>` +
-          `</td>` +
-          `<td>${b.name}</td>` +
-          `<td>` +
-            `<select data-idx="${start + idx}" class="adults-select">` +
-              Array.from({length: 10}, (_, i) => `<option value="${i+1}" ${b.numberOfPeople == i+1 ? 'selected' : ''}>${i+1}</option>`).join('') +
-            `</select>` +
-          `</td>` +
-          `<td>` +
-            `<select data-idx="${start + idx}" class="kids-select">` +
-              Array.from({length: 10}, (_, i) => `<option value="${i+1}" ${b.numberOfKids == i+1 ? 'selected' : ''}>${i+1}</option>`).join('') +
-            `</select>` +
-          `</td>` +
-          `<td>${b.email}</td>` +
-          `<td>` +
-            `<select data-idx="${start + idx}" class="status-select">
-              <option value="NEW" ${status === 'NEW' ? 'selected' : ''}>NEW</option>
-              <option value="REMOVED" ${status === 'REMOVED' ? 'selected' : ''}>REMOVED</option>
-              <option value="CHECKED_IN" ${status === 'CHECKED_IN' ? 'selected' : ''}>CHECKED_IN</option>
-            </select>` +
-          `</td>` +
-          `<td>${b.created ? new Date(b.created).toLocaleString() : ""}</td>` +
-          `<td>${b.bookingId}</td>` +
-          `</tr>`;
-      });
-
-      html += "</tbody></table>";
-      tableContainer.innerHTML = html;
-      updateBookingStats();
-
-      // Add event listeners for status change
-      document.querySelectorAll('.status-select').forEach(sel => {
-        sel.addEventListener('change', function(evt) {
-          const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = sortedBookings[start + idx];
-          const newStatus = this.value;
-          if (booking.status === newStatus) return;
-          updateBookingStatus(booking.bookingId, newStatus, this);
-        });
-      });
-
-      // Add event listeners for time change
-      document.querySelectorAll('.time-select').forEach(sel => {
-        sel.addEventListener('change', function(evt) {
-          const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = sortedBookings[start + idx];
-          const newTime = this.value;
-          if (booking.timeStr === newTime) return;
-          updateBookingTime(booking.bookingId, newTime, this);
-        });
-      });
-
-      // Add event listeners for adults change
-      document.querySelectorAll('.adults-select').forEach(sel => {
-        sel.addEventListener('change', function(evt) {
-          const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = sortedBookings[start + idx];
-          const newAdults = parseInt(this.value);
-          if (booking.numberOfPeople === newAdults) return;
-          updateBookingAdults(booking.bookingId, newAdults, this);
-        });
-      });
-
-      // Add event listeners for kids change
-      document.querySelectorAll('.kids-select').forEach(sel => {
-        sel.addEventListener('change', function(evt) {
-          const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = sortedBookings[start + idx];
-          const newKids = parseInt(this.value);
-          if (booking.numberOfKids === newKids) return;
-          updateBookingKids(booking.bookingId, newKids, this);
-        });
-      });
-
-      // Add event listeners for date change
-      document.querySelectorAll('.date-select').forEach(sel => {
-        sel.addEventListener('change', function(evt) {
-          const idx = parseInt(this.getAttribute('data-idx'));
-          const booking = sortedBookings[start + idx];
-          const newDate = this.value;
-          if (booking.dateStr === newDate) return;
-          updateBookingDate(booking.bookingId, newDate, this);
-        });
-      });
-    }
-
-    // Add a modal for blocking UI during updates
-    const updateModal = document.createElement('div');
-    updateModal.id = 'updateModal';
-    updateModal.style.display = 'none';
-    updateModal.style.position = 'fixed';
-    updateModal.style.top = 0;
-    updateModal.style.left = 0;
-    updateModal.style.width = '100vw';
-    updateModal.style.height = '100vh';
-    updateModal.style.background = 'rgba(0,0,0,0.4)';
-    updateModal.style.zIndex = 9999;
-    updateModal.style.alignItems = 'center';
-    updateModal.style.justifyContent = 'center';
-    updateModal.innerHTML = '<div style="background:#fff;padding:2em 3em;border-radius:8px;font-size:1.3em;box-shadow:0 2px 16px #0002;">Updating…</div>';
-    document.body.appendChild(updateModal);
-
-    function showUpdateModal() {
-      updateModal.style.display = 'flex';
-    }
-    function hideUpdateModal() {
-      updateModal.style.display = 'none';
-    }
-
-    function updateBookingField(bookingId, field, value, selectEl) {
-      selectEl.disabled = true;
-      showUpdateModal();
-      const booking = allBookings.find(b => b.bookingId === bookingId);
-      if (!booking) {
-        alert('Booking not found');
-        selectEl.disabled = false;
-        hideUpdateModal();
-        return;
-      }
-      booking[field] = value;
-      const url = `${API_BASE}/bookings/${bookingId}?admin=${encodeURIComponent(adminPwd)}`;
-      console.log('Updating booking:', JSON.stringify(booking, null, 2)); // Print JSON to console
-      fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(booking),
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to save booking');
-          renderTable();
-          if (typeof renderPagination === 'function') renderPagination();
-        })
-        .catch(err => {
-          alert(err.message);
-          selectEl.disabled = false;
-        })
-        .finally(() => {
-          hideUpdateModal();
-        });
-    }
-
-    function updateBookingStatus(bookingId, newStatus, selectEl) {
-      updateBookingField(bookingId, 'status', newStatus, selectEl);
-    }
-
-    function updateBookingTime(bookingId, newTime, selectEl) {
-      updateBookingField(bookingId, 'timeStr', newTime, selectEl);
-    }
-
-    function updateBookingAdults(bookingId, newAdults, selectEl) {
-      updateBookingField(bookingId, 'numberOfPeople', newAdults, selectEl);
-    }
-
-    function updateBookingKids(bookingId, newKids, selectEl) {
-      updateBookingField(bookingId, 'numberOfKids', newKids, selectEl);
-    }
-
-    function updateBookingDate(bookingId, newDate, selectEl) {
-      updateBookingField(bookingId, 'dateStr', newDate, selectEl);
-    }
-
-    function renderPagination() {
-      paginationDiv.innerHTML = "";
-      const pageCount = Math.ceil(filteredBookings.length / PAGE_SIZE);
-      if (pageCount <= 1) return;
-
-      for (let i = 1; i <= pageCount; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        if (i === currentPage) btn.disabled = true;
-        btn.addEventListener("click", () => {
-          currentPage = i;
-          renderTable();
-          renderPagination();
-        });
-        paginationDiv.appendChild(btn);
-      }
-    }
-
-    function updateBookingStats() {
-      totalBookingsSpan.textContent = allBookings.length;
-      filteredBookingsSpan.textContent = filteredBookings.length;
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lustiga Landet Booking Admin — Precision</title>
+<style>
+  :root {
+    /* Spacing */
+    --sp-xs: 4px;
+    --sp-sm: 8px;
+    --sp-md: 12px;
+    --sp-lg: 16px;
+    --sp-xl: 24px;
+
+    /* Colors — monochromatic gray + steel blue accent */
+    --color-primary: #4a6fa5;
+    --color-primary-hover: #3d5f8f;
+    --color-primary-light: #e8eef6;
+    --color-bg: #f8f9fa;
+    --color-surface: #ffffff;
+    --color-border: #d1d5db;
+    --color-border-light: #e5e7eb;
+    --color-text: #1f2937;
+    --color-text-secondary: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-row-alt: #fafbfc;
+    --color-danger: #b91c1c;
+    --color-danger-hover: #991b1b;
+    --color-danger-bg: #fef2f2;
+    --color-success: #15803d;
+    --color-success-bg: #f0fdf4;
+    --color-warning: #a16207;
+    --color-warning-bg: #fefce8;
+    --color-focus-ring: #4a6fa5;
+
+    /* Typography */
+    --font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-size-xs: 11px;
+    --font-size-sm: 12px;
+    --font-size-base: 13px;
+    --font-size-md: 14px;
+    --font-size-heading: 15px;
+    --font-size-lg: 18px;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+
+    /* Borders */
+    --radius: 4px;
+    --border: 1px solid var(--color-border);
+    --border-light: 1px solid var(--color-border-light);
+
+    /* Transitions */
+    --transition-fast: 100ms ease;
+  }
+
+  /* Reset */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus indicator — the one permitted visible ring */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 1px;
+  }
+
+  /* ── App shell ── */
+  .app-header {
+    background: var(--color-surface);
+    border-bottom: var(--border);
+    padding: var(--sp-sm) var(--sp-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .app-header h1 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+
+  .app-header h1 span {
+    color: var(--color-primary);
+  }
+
+  .header-stats {
+    display: flex;
+    gap: var(--sp-lg);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .header-stats .stat-value {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+  }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    background: var(--color-surface);
+    border-bottom: var(--border);
+    padding: 0 var(--sp-lg);
+    gap: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--sp-sm) var(--sp-lg);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .tab-btn:hover {
+    color: var(--color-text);
+  }
+
+  .tab-btn[aria-selected="true"] {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+
+  /* ── Shared layout ── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--sp-lg);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    margin-bottom: var(--sp-md);
+    flex-wrap: wrap;
+  }
+
+  .section-title {
+    font-size: var(--font-size-heading);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* ── Password gate ── */
+  .password-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    gap: var(--sp-md);
+  }
+
+  .password-gate label {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .password-gate .gate-row {
+    display: flex;
+    gap: var(--sp-sm);
+  }
+
+  .password-gate .error-msg {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    min-height: 20px;
+  }
+
+  /* ── Form controls ── */
+  input[type="text"],
+  input[type="password"],
+  input[type="search"],
+  input[type="email"],
+  textarea,
+  select {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-sm) var(--sp-md);
+    transition: border-color var(--transition-fast);
+    min-height: 36px;
+  }
+
+  input:hover, textarea:hover, select:hover {
+    border-color: #9ca3af;
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  /* Inline selects — compact for table cells */
+  .inline-select {
+    font-size: var(--font-size-sm);
+    padding: var(--sp-xs) var(--sp-sm);
+    min-height: 30px;
+    border: var(--border-light);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    cursor: pointer;
+    min-width: 44px;
+  }
+
+  .inline-select:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 0;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-xs);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-sm) var(--sp-md);
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    min-height: 36px;
+    min-width: 44px;
+    white-space: nowrap;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .btn:hover {
+    background: var(--color-bg);
+  }
+
+  .btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+
+  .btn-danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: var(--color-surface);
+  }
+
+  .btn-danger:hover {
+    background: var(--color-danger-bg);
+  }
+
+  .btn-sm {
+    font-size: var(--font-size-xs);
+    padding: var(--sp-xs) var(--sp-sm);
+    min-height: 30px;
+  }
+
+  .btn-icon {
+    padding: var(--sp-sm);
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-md);
+  }
+
+  .filter-bar .search-input {
+    flex: 1 1 200px;
+    max-width: 280px;
+  }
+
+  .filter-bar .filter-count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-left: auto;
+  }
+
+  /* ── Table ── */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: var(--border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 820px;
+  }
+
+  thead {
+    background: var(--color-bg);
+  }
+
+  th {
+    text-align: left;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 6px 10px;
+    border-bottom: var(--border);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  td {
+    padding: 6px 10px;
+    border-bottom: var(--border-light);
+    font-size: var(--font-size-base);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) {
+    background: var(--color-row-alt);
+  }
+
+  tbody tr:hover {
+    background: var(--color-primary-light);
+  }
+
+  .booking-id {
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: 2px 8px;
+    border-radius: var(--radius);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .status-confirmed {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid #bbf7d0;
+  }
+
+  .status-pending {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+    border: 1px solid #fef08a;
+  }
+
+  .status-cancelled {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid #fecaca;
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-sm) 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .pagination .page-btns {
+    display: flex;
+    gap: var(--sp-xs);
+  }
+
+  .pagination .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: var(--sp-sm);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border: var(--border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .pagination .page-btn:hover:not(:disabled) {
+    background: var(--color-bg);
+  }
+
+  .pagination .page-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .pagination .page-btn[aria-current="page"] {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  /* ── Tab panel ── */
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  /* ── Template cards ── */
+  .template-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-sm);
+  }
+
+  .template-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-md);
+    background: var(--color-surface);
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-md) var(--sp-lg);
+    transition: border-color var(--transition-fast);
+  }
+
+  .template-card:hover {
+    border-color: #9ca3af;
+  }
+
+  .template-card .tpl-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .template-card .tpl-name {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-md);
+  }
+
+  .template-card .tpl-meta {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    display: flex;
+    gap: var(--sp-md);
+    margin-top: 2px;
+  }
+
+  .template-card .tpl-meta .tpl-type {
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-size: var(--font-size-xs);
+    background: var(--color-bg);
+    border: var(--border-light);
+    padding: 1px 6px;
+    border-radius: var(--radius);
+  }
+
+  .tpl-active-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: var(--sp-xs);
+  }
+
+  .tpl-active-dot.active { background: var(--color-success); }
+  .tpl-active-dot.inactive { background: var(--color-text-muted); }
+
+  .template-card .tpl-actions {
+    display: flex;
+    gap: var(--sp-xs);
+    flex-shrink: 0;
+  }
+
+  /* ── Template editor ── */
+  .template-editor {
+    background: var(--color-surface);
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-lg);
+    margin-bottom: var(--sp-lg);
+  }
+
+  .template-editor.hidden {
+    display: none;
+  }
+
+  .editor-title {
+    font-size: var(--font-size-heading);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--sp-md);
+    padding-bottom: var(--sp-sm);
+    border-bottom: var(--border-light);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-md);
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-xs);
+  }
+
+  .form-field.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-field label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  .form-field label .required {
+    color: var(--color-danger);
+  }
+
+  .checkbox-field {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-sm);
+  }
+
+  .checkbox-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  .checkbox-field label {
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: var(--sp-sm);
+    margin-top: var(--sp-lg);
+    padding-top: var(--sp-md);
+    border-top: var(--border-light);
+  }
+
+  /* ── Collapsible placeholders ── */
+  .placeholders-section {
+    margin-top: var(--sp-lg);
+  }
+
+  .placeholders-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    background: none;
+    border: none;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--sp-sm) 0;
+    min-height: 44px;
+  }
+
+  .placeholders-toggle:hover {
+    color: var(--color-text);
+  }
+
+  .placeholders-toggle .chevron {
+    display: inline-block;
+    transition: transform var(--transition-fast);
+    font-size: 10px;
+  }
+
+  .placeholders-toggle[aria-expanded="true"] .chevron {
+    transform: rotate(90deg);
+  }
+
+  .placeholders-body {
+    display: none;
+    padding: var(--sp-md);
+    background: var(--color-bg);
+    border: var(--border-light);
+    border-radius: var(--radius);
+    margin-top: var(--sp-xs);
+  }
+
+  .placeholders-body.open {
+    display: block;
+  }
+
+  .placeholders-body table {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .placeholders-body th,
+  .placeholders-body td {
+    font-size: var(--font-size-sm);
+    padding: var(--sp-xs) var(--sp-sm);
+  }
+
+  .placeholders-body code {
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-size: var(--font-size-xs);
+    background: var(--color-surface);
+    border: var(--border-light);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ── Toast notification ── */
+  .toast {
+    position: fixed;
+    bottom: var(--sp-lg);
+    right: var(--sp-lg);
+    background: var(--color-text);
+    color: #ffffff;
+    font-size: var(--font-size-sm);
+    padding: var(--sp-sm) var(--sp-lg);
+    border-radius: var(--radius);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 200ms ease, transform 200ms ease;
+    z-index: 200;
+    pointer-events: none;
+  }
+
+  .toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .app-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--sp-xs);
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .filter-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-bar .search-input {
+      max-width: none;
+    }
+
+    .filter-bar .filter-count {
+      margin-left: 0;
+    }
+
+    .template-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .template-card .tpl-actions {
+      width: 100%;
+    }
+
+    .template-card .tpl-actions .btn {
+      flex: 1;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- App Header -->
+<header class="app-header">
+  <h1><span>LL</span> Booking Admin</h1>
+  <div class="header-stats" id="headerStats" aria-live="polite"></div>
+</header>
+
+<!-- Tab Bar -->
+<nav class="tab-bar" role="tablist" aria-label="Main sections">
+  <button class="tab-btn" role="tab" id="tabBookings" aria-selected="true" aria-controls="panelBookings" onclick="switchTab('bookings')">Bookings</button>
+  <button class="tab-btn" role="tab" id="tabTemplates" aria-selected="false" aria-controls="panelTemplates" onclick="switchTab('templates')">Email Templates</button>
+</nav>
+
+<!-- ═══════════ BOOKINGS PANEL ═══════════ -->
+<div class="tab-panel active" id="panelBookings" role="tabpanel" aria-labelledby="tabBookings">
+  <div class="container">
+
+    <!-- Password Gate -->
+    <div id="passwordGate" class="password-gate">
+      <label for="passwordInput">Enter admin password to view bookings</label>
+      <div class="gate-row">
+        <input type="password" id="passwordInput" autocomplete="current-password" aria-describedby="passwordError" placeholder="Password">
+        <button class="btn btn-primary" onclick="checkPassword()" id="passwordSubmit">Unlock</button>
+      </div>
+      <div id="passwordError" class="error-msg" role="alert" aria-live="assertive"></div>
+    </div>
+
+    <!-- Bookings content (hidden until unlocked) -->
+    <div id="bookingsContent" style="display:none;">
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <input type="search" class="search-input" id="searchInput" placeholder="Filter by name, email, or ID..." aria-label="Filter bookings" oninput="filterBookings()">
+        <select class="inline-select" id="statusFilter" aria-label="Filter by status" onchange="filterBookings()" style="min-height:36px;">
+          <option value="">All statuses</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="pending">Pending</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <span class="filter-count" id="filterCount" aria-live="polite"></span>
+      </div>
+
+      <!-- Table -->
+      <div class="table-scroll">
+        <table aria-label="Bookings">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Adults</th>
+              <th>Kids</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ TEMPLATES PANEL ═══════════ -->
+<div class="tab-panel" id="panelTemplates" role="tabpanel" aria-labelledby="tabTemplates">
+  <div class="container">
+
+    <!-- Editor (hidden by default) -->
+    <div class="template-editor hidden" id="templateEditor">
+      <div class="editor-title" id="editorTitle">New template</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="tplId">Template ID <span class="required">*</span></label>
+          <input type="text" id="tplId" placeholder="e.g. booking-confirmation" required>
+        </div>
+        <div class="form-field">
+          <label for="tplType">Type <span class="required">*</span></label>
+          <select id="tplType" aria-label="Template type">
+            <option value="transactional">Transactional</option>
+            <option value="marketing">Marketing</option>
+            <option value="notification">Notification</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="tplName">Name <span class="required">*</span></label>
+          <input type="text" id="tplName" placeholder="e.g. Booking Confirmation">
+        </div>
+        <div class="form-field">
+          <label for="tplSubject">Subject <span class="required">*</span></label>
+          <input type="text" id="tplSubject" placeholder="e.g. Your booking is confirmed!">
+        </div>
+        <div class="form-field full-width">
+          <label for="tplBody">Body <span class="required">*</span></label>
+          <textarea id="tplBody" rows="8" placeholder="Email body — use {{placeholders}} for dynamic content"></textarea>
+        </div>
+        <div class="form-field checkbox-field">
+          <input type="checkbox" id="tplActive" checked>
+          <label for="tplActive">Active</label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveTemplate()" id="editorSaveBtn">Save template</button>
+        <button class="btn" onclick="closeEditor()">Cancel</button>
+      </div>
+
+      <!-- Placeholders reference -->
+      <div class="placeholders-section">
+        <button class="placeholders-toggle" aria-expanded="false" onclick="togglePlaceholders(this)" aria-controls="placeholdersBody">
+          <span class="chevron">&#9654;</span> Available placeholders
+        </button>
+        <div class="placeholders-body" id="placeholdersBody">
+          <table>
+            <thead>
+              <tr><th>Placeholder</th><th>Description</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>{{guest_name}}</code></td><td>Full name of the guest</td><td>Anna Svensson</td></tr>
+              <tr><td><code>{{booking_date}}</code></td><td>Date of the booking</td><td>2026-07-15</td></tr>
+              <tr><td><code>{{booking_time}}</code></td><td>Scheduled time slot</td><td>10:00</td></tr>
+              <tr><td><code>{{num_guests}}</code></td><td>Total number of guests</td><td>5</td></tr>
+              <tr><td><code>{{booking_id}}</code></td><td>Unique booking reference</td><td>BK-1042</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template list header -->
+    <div class="section-header">
+      <h2 class="section-title">Email Templates</h2>
+      <button class="btn btn-primary" onclick="openNewTemplate()">+ New template</button>
+    </div>
+
+    <!-- Template cards -->
+    <div class="template-list" id="templateList"></div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  /* ═══════════════════════════════════════════
+     DATA
+     ═══════════════════════════════════════════ */
+
+  const ADMIN_PASSWORD = 'admin';
+
+  const AVAILABLE_DATES = [
+    '2026-07-10', '2026-07-11', '2026-07-12', '2026-07-15',
+    '2026-07-17', '2026-07-18', '2026-07-20', '2026-07-22',
+    '2026-07-24', '2026-07-25'
+  ];
+
+  const AVAILABLE_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+
+  let bookings = [
+    { id: 'BK-1001', name: 'Anna Svensson',     email: 'anna.svensson@mail.se',     date: '2026-07-10', time: '10:00', adults: 2, kids: 3, status: 'confirmed' },
+    { id: 'BK-1002', name: 'Erik Lindgren',      email: 'erik.lindgren@gmail.com',   date: '2026-07-10', time: '11:00', adults: 1, kids: 2, status: 'confirmed' },
+    { id: 'BK-1003', name: 'Maria Johansson',    email: 'maria.j@outlook.se',        date: '2026-07-11', time: '09:00', adults: 2, kids: 1, status: 'pending' },
+    { id: 'BK-1004', name: 'Lars Pettersson',    email: 'lars.p@telia.se',           date: '2026-07-12', time: '14:00', adults: 4, kids: 2, status: 'confirmed' },
+    { id: 'BK-1005', name: 'Karin Nilsson',      email: 'karin.n@yahoo.se',          date: '2026-07-15', time: '13:00', adults: 2, kids: 4, status: 'cancelled' },
+    { id: 'BK-1006', name: 'Oskar Bergstrom',    email: 'oskar.b@icloud.com',        date: '2026-07-15', time: '10:00', adults: 3, kids: 1, status: 'confirmed' },
+    { id: 'BK-1007', name: 'Sofia Eriksson',     email: 'sofia.e@live.se',           date: '2026-07-17', time: '12:00', adults: 2, kids: 2, status: 'pending' },
+    { id: 'BK-1008', name: 'Gustav Holmberg',    email: 'gustav.h@bredband.se',      date: '2026-07-18', time: '15:00', adults: 1, kids: 3, status: 'confirmed' },
+    { id: 'BK-1009', name: 'Emma Lundqvist',     email: 'emma.l@gmail.com',          date: '2026-07-18', time: '09:00', adults: 2, kids: 0, status: 'confirmed' },
+    { id: 'BK-1010', name: 'Anders Norberg',     email: 'anders.n@spray.se',         date: '2026-07-20', time: '11:00', adults: 3, kids: 5, status: 'pending' },
+    { id: 'BK-1011', name: 'Linnea Axelsson',    email: 'linnea.a@hotmail.com',      date: '2026-07-20', time: '16:00', adults: 2, kids: 2, status: 'confirmed' },
+    { id: 'BK-1012', name: 'Fredrik Sjostrom',   email: 'fredrik.s@comhem.se',       date: '2026-07-22', time: '10:00', adults: 1, kids: 1, status: 'cancelled' },
+    { id: 'BK-1013', name: 'Hanna Wikstrom',     email: 'hanna.w@gmail.com',         date: '2026-07-24', time: '13:00', adults: 2, kids: 3, status: 'confirmed' },
+    { id: 'BK-1014', name: 'Karl-Erik Dahl',     email: 'ke.dahl@telia.se',          date: '2026-07-24', time: '14:00', adults: 5, kids: 0, status: 'pending' },
+    { id: 'BK-1015', name: 'Maja Lindstrom',     email: 'maja.l@outlook.se',         date: '2026-07-25', time: '12:00', adults: 2, kids: 2, status: 'confirmed' }
+  ];
+
+  let templates = [
+    {
+      templateId: 'booking-confirmation',
+      type: 'transactional',
+      name: 'Booking Confirmation',
+      subject: 'Your booking at Lustiga Landet is confirmed!',
+      body: 'Hi {{guest_name}},\n\nYour booking ({{booking_id}}) on {{booking_date}} at {{booking_time}} for {{num_guests}} guests has been confirmed.\n\nWelcome to Lustiga Landet!',
+      active: true
+    },
+    {
+      templateId: 'booking-reminder',
+      type: 'notification',
+      name: 'Booking Reminder',
+      subject: 'Reminder: Your visit to Lustiga Landet is tomorrow',
+      body: 'Hi {{guest_name}},\n\nThis is a friendly reminder that your visit to Lustiga Landet is scheduled for {{booking_date}} at {{booking_time}}.\n\nSee you soon!',
+      active: true
+    },
+    {
+      templateId: 'cancellation-notice',
+      type: 'transactional',
+      name: 'Cancellation Notice',
+      subject: 'Your booking has been cancelled',
+      body: 'Hi {{guest_name}},\n\nYour booking ({{booking_id}}) on {{booking_date}} has been cancelled as requested.\n\nWe hope to see you another time!',
+      active: false
+    }
+  ];
+
+  /* ═══════════════════════════════════════════
+     STATE
+     ═══════════════════════════════════════════ */
+
+  let currentPage = 1;
+  const PAGE_SIZE = 10;
+  let filtered = [...bookings];
+  let editingTemplateIndex = -1; // -1 = new
+
+  /* ═══════════════════════════════════════════
+     TABS
+     ═══════════════════════════════════════════ */
+
+  function switchTab(tab) {
+    document.getElementById('tabBookings').setAttribute('aria-selected', tab === 'bookings');
+    document.getElementById('tabTemplates').setAttribute('aria-selected', tab === 'templates');
+    document.getElementById('panelBookings').classList.toggle('active', tab === 'bookings');
+    document.getElementById('panelTemplates').classList.toggle('active', tab === 'templates');
+    updateHeaderStats();
+  }
+
+  /* ═══════════════════════════════════════════
+     PASSWORD GATE
+     ═══════════════════════════════════════════ */
+
+  function checkPassword() {
+    const input = document.getElementById('passwordInput');
+    const error = document.getElementById('passwordError');
+    if (input.value === ADMIN_PASSWORD) {
+      document.getElementById('passwordGate').style.display = 'none';
+      document.getElementById('bookingsContent').style.display = 'block';
+      filterBookings();
+    } else {
+      error.textContent = 'Incorrect password. Try again.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  /* ═══════════════════════════════════════════
+     HEADER STATS
+     ═══════════════════════════════════════════ */
+
+  function updateHeaderStats() {
+    const isBookings = document.getElementById('panelBookings').classList.contains('active');
+    const el = document.getElementById('headerStats');
+    if (isBookings && document.getElementById('bookingsContent').style.display !== 'none') {
+      const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+      const pending = bookings.filter(b => b.status === 'pending').length;
+      const cancelled = bookings.filter(b => b.status === 'cancelled').length;
+      el.innerHTML =
+        '<span>Total: <span class="stat-value">' + bookings.length + '</span></span>' +
+        '<span>Confirmed: <span class="stat-value">' + confirmed + '</span></span>' +
+        '<span>Pending: <span class="stat-value">' + pending + '</span></span>' +
+        '<span>Cancelled: <span class="stat-value">' + cancelled + '</span></span>';
+    } else if (!isBookings) {
+      const active = templates.filter(t => t.active).length;
+      el.innerHTML =
+        '<span>Templates: <span class="stat-value">' + templates.length + '</span></span>' +
+        '<span>Active: <span class="stat-value">' + active + '</span></span>';
+    } else {
+      el.innerHTML = '';
+    }
+  }
+
+  /* ═══════════════════════════════════════════
+     BOOKINGS — FILTER + RENDER
+     ═══════════════════════════════════════════ */
+
+  function filterBookings() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const statusVal = document.getElementById('statusFilter').value;
+
+    filtered = bookings.filter(function(b) {
+      const matchQuery = !query ||
+        b.name.toLowerCase().includes(query) ||
+        b.email.toLowerCase().includes(query) ||
+        b.id.toLowerCase().includes(query);
+      const matchStatus = !statusVal || b.status === statusVal;
+      return matchQuery && matchStatus;
+    });
+
+    currentPage = 1;
+    renderBookings();
+    updateHeaderStats();
+  }
+
+  function renderBookings() {
+    const tbody = document.getElementById('bookingsBody');
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const page = filtered.slice(start, start + PAGE_SIZE);
+
+    // Filter count
+    document.getElementById('filterCount').textContent =
+      filtered.length === bookings.length
+        ? filtered.length + ' bookings'
+        : filtered.length + ' of ' + bookings.length + ' bookings';
+
+    // Table rows
+    var html = '';
+    page.forEach(function(b) {
+      html += '<tr>' +
+        '<td class="booking-id">' + esc(b.id) + '</td>' +
+        '<td>' + esc(b.name) + '</td>' +
+        '<td>' + esc(b.email) + '</td>' +
+        '<td>' + buildSelect('date', b.id, AVAILABLE_DATES, b.date) + '</td>' +
+        '<td>' + buildSelect('time', b.id, AVAILABLE_TIMES, b.time) + '</td>' +
+        '<td>' + buildSelect('adults', b.id, ['1','2','3','4','5','6'], String(b.adults)) + '</td>' +
+        '<td>' + buildSelect('kids', b.id, ['0','1','2','3','4','5','6'], String(b.kids)) + '</td>' +
+        '<td>' + buildStatusSelect(b.id, b.status) + '</td>' +
+        '</tr>';
+    });
+
+    tbody.innerHTML = html;
+    renderPagination(totalPages);
+  }
+
+  function buildSelect(field, bookingId, options, current) {
+    var s = '<select class="inline-select" aria-label="' + esc(field) + ' for ' + esc(bookingId) + '" onchange="updateBooking(\'' + esc(bookingId) + '\',\'' + field + '\',this.value)">';
+    options.forEach(function(opt) {
+      s += '<option value="' + esc(opt) + '"' + (opt === current ? ' selected' : '') + '>' + esc(opt) + '</option>';
+    });
+    s += '</select>';
+    return s;
+  }
+
+  function buildStatusSelect(bookingId, current) {
+    var statuses = ['confirmed', 'pending', 'cancelled'];
+    var s = '<select class="inline-select" aria-label="Status for ' + esc(bookingId) + '" onchange="updateBooking(\'' + esc(bookingId) + '\',\'status\',this.value)">';
+    statuses.forEach(function(st) {
+      s += '<option value="' + esc(st) + '"' + (st === current ? ' selected' : '') + '>' + st.charAt(0).toUpperCase() + st.slice(1) + '</option>';
+    });
+    s += '</select>';
+    return s;
+  }
+
+  function updateBooking(bookingId, field, value) {
+    var booking = bookings.find(function(b) { return b.id === bookingId; });
+    if (!booking) return;
+    if (field === 'adults' || field === 'kids') {
+      booking[field] = parseInt(value, 10);
+    } else {
+      booking[field] = value;
+    }
+    showToast('Updated ' + field + ' for ' + bookingId);
+    // re-filter in case status filter is active
+    filterBookings();
+  }
+
+  /* ═══════════════════════════════════════════
+     PAGINATION
+     ═══════════════════════════════════════════ */
+
+  function renderPagination(totalPages) {
+    var el = document.getElementById('pagination');
+    var start = (currentPage - 1) * PAGE_SIZE + 1;
+    var end = Math.min(currentPage * PAGE_SIZE, filtered.length);
+    var info = filtered.length === 0
+      ? 'No bookings found'
+      : 'Showing ' + start + '\u2013' + end + ' of ' + filtered.length;
+
+    var btns = '<button class="page-btn" onclick="goPage(' + (currentPage - 1) + ')" ' +
+      (currentPage <= 1 ? 'disabled' : '') + ' aria-label="Previous page">&lsaquo;</button>';
+
+    for (var p = 1; p <= totalPages; p++) {
+      btns += '<button class="page-btn"' +
+        (p === currentPage ? ' aria-current="page"' : '') +
+        ' onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+
+    btns += '<button class="page-btn" onclick="goPage(' + (currentPage + 1) + ')" ' +
+      (currentPage >= totalPages ? 'disabled' : '') + ' aria-label="Next page">&rsaquo;</button>';
+
+    el.innerHTML = '<span>' + info + '</span><div class="page-btns">' + btns + '</div>';
+  }
+
+  function goPage(p) {
+    var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderBookings();
+    // Scroll table into view
+    document.querySelector('.table-scroll').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ═══════════════════════════════════════════
+     TEMPLATES — RENDER
+     ═══════════════════════════════════════════ */
+
+  function renderTemplates() {
+    var el = document.getElementById('templateList');
+    if (templates.length === 0) {
+      el.innerHTML = '<p style="color:var(--color-text-secondary);padding:var(--sp-lg);">No templates yet. Create one to get started.</p>';
+      return;
+    }
+    var html = '';
+    templates.forEach(function(t, i) {
+      html += '<div class="template-card">' +
+        '<div class="tpl-info">' +
+          '<div class="tpl-name">' +
+            '<span class="tpl-active-dot ' + (t.active ? 'active' : 'inactive') + '" title="' + (t.active ? 'Active' : 'Inactive') + '"></span>' +
+            esc(t.name) +
+          '</div>' +
+          '<div class="tpl-meta">' +
+            '<span class="tpl-type">' + esc(t.type) + '</span>' +
+            '<span>' + esc(t.templateId) + '</span>' +
+            '<span>' + esc(t.subject) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tpl-actions">' +
+          '<button class="btn btn-sm" onclick="editTemplate(' + i + ')" aria-label="Edit ' + esc(t.name) + '">Edit</button>' +
+          '<button class="btn btn-sm btn-danger" onclick="deleteTemplate(' + i + ')" aria-label="Delete ' + esc(t.name) + '">Delete</button>' +
+        '</div>' +
+      '</div>';
+    });
+    el.innerHTML = html;
+    updateHeaderStats();
+  }
+
+  /* ═══════════════════════════════════════════
+     TEMPLATES — EDITOR
+     ═══════════════════════════════════════════ */
+
+  function openNewTemplate() {
+    editingTemplateIndex = -1;
+    document.getElementById('editorTitle').textContent = 'New template';
+    document.getElementById('editorSaveBtn').textContent = 'Create template';
+    document.getElementById('tplId').value = '';
+    document.getElementById('tplType').value = 'transactional';
+    document.getElementById('tplName').value = '';
+    document.getElementById('tplSubject').value = '';
+    document.getElementById('tplBody').value = '';
+    document.getElementById('tplActive').checked = true;
+    document.getElementById('tplId').removeAttribute('readonly');
+    showEditor();
+  }
+
+  function editTemplate(index) {
+    editingTemplateIndex = index;
+    var t = templates[index];
+    document.getElementById('editorTitle').textContent = 'Edit template';
+    document.getElementById('editorSaveBtn').textContent = 'Save changes';
+    document.getElementById('tplId').value = t.templateId;
+    document.getElementById('tplId').setAttribute('readonly', 'readonly');
+    document.getElementById('tplType').value = t.type;
+    document.getElementById('tplName').value = t.name;
+    document.getElementById('tplSubject').value = t.subject;
+    document.getElementById('tplBody').value = t.body;
+    document.getElementById('tplActive').checked = t.active;
+    showEditor();
+  }
+
+  function showEditor() {
+    var ed = document.getElementById('templateEditor');
+    ed.classList.remove('hidden');
+    ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('tplId').focus();
+  }
+
+  function closeEditor() {
+    document.getElementById('templateEditor').classList.add('hidden');
+    editingTemplateIndex = -1;
+  }
+
+  function saveTemplate() {
+    var id = document.getElementById('tplId').value.trim();
+    var type = document.getElementById('tplType').value;
+    var name = document.getElementById('tplName').value.trim();
+    var subject = document.getElementById('tplSubject').value.trim();
+    var body = document.getElementById('tplBody').value.trim();
+    var active = document.getElementById('tplActive').checked;
+
+    if (!id || !name || !subject || !body) {
+      showToast('Please fill in all required fields');
+      return;
+    }
+
+    if (editingTemplateIndex === -1) {
+      // Check for duplicate ID
+      if (templates.some(function(t) { return t.templateId === id; })) {
+        showToast('A template with this ID already exists');
+        return;
+      }
+      templates.push({ templateId: id, type: type, name: name, subject: subject, body: body, active: active });
+      showToast('Template "' + name + '" created');
+    } else {
+      templates[editingTemplateIndex] = { templateId: id, type: type, name: name, subject: subject, body: body, active: active };
+      showToast('Template "' + name + '" updated');
+    }
+
+    closeEditor();
+    renderTemplates();
+  }
+
+  function deleteTemplate(index) {
+    var name = templates[index].name;
+    if (!confirm('Delete template "' + name + '"?')) return;
+    templates.splice(index, 1);
+    showToast('Template "' + name + '" deleted');
+    // If we were editing this template, close the editor
+    if (editingTemplateIndex === index) closeEditor();
+    else if (editingTemplateIndex > index) editingTemplateIndex--;
+    renderTemplates();
+  }
+
+  /* ═══════════════════════════════════════════
+     PLACEHOLDERS TOGGLE
+     ═══════════════════════════════════════════ */
+
+  function togglePlaceholders(btn) {
+    var expanded = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', !expanded);
+    document.getElementById('placeholdersBody').classList.toggle('open', !expanded);
+  }
+
+  /* ═══════════════════════════════════════════
+     TOAST
+     ═══════════════════════════════════════════ */
+
+  var toastTimer = null;
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      el.classList.remove('visible');
+    }, 2200);
+  }
+
+  /* ═══════════════════════════════════════════
+     UTILS
+     ═══════════════════════════════════════════ */
+
+  function esc(str) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(String(str)));
+    return d.innerHTML;
+  }
+
+  /* ═══════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════ */
+
+  renderTemplates();
+  updateHeaderStats();
+</script>
+</body>
+</html>

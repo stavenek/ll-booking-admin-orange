@@ -1,0 +1,699 @@
+openapi: 3.0.0
+info:
+  title: Lustiga Landet Booking API
+  version: 1.0.0
+  description: API for managing bookings at Lustiga Landet
+
+servers:
+  - url: https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1
+    description: Dev server
+
+components:
+  securitySchemes:
+    adminAuth:
+      type: apiKey
+      in: query
+      name: admin
+      description: Admin authentication key required for protected endpoints
+  
+  schemas:
+    Booking:
+      type: object
+      required:
+        - dateStr
+        - timeStr
+        - name
+        - numberOfCars
+        - numberOfPeople
+        - numberOfKids
+        - email
+        - gdpr
+      properties:
+        dateStr:
+          type: string
+          description: Date in YYYYMMDD format
+          example: "20220715"
+        timeStr:
+          type: string
+          description: Time in HH:mm format
+          example: "10:00"
+        name:
+          type: string
+          description: Name of the person making the booking
+        numberOfCars:
+          type: integer
+          minimum: 0
+          maximum: 5
+          description: Number of cars (max 5)
+        numberOfPeople:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Number of adults (max 10)
+        numberOfKids:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of children (max 10)
+        email:
+          type: string
+          format: email
+        gdpr:
+          type: boolean
+          description: GDPR consent
+        bookingId:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          enum: [NEW, CHECKED_IN, REMOVED]
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+
+    BookingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        bookingId:
+          type: string
+        errorMsg:
+          type: string
+        errorCode:
+          type: string
+
+    SlotStatus:
+      type: object
+      properties:
+        dateStr:
+          type: string
+        timeStr:
+          type: string
+        displayDate:
+          type: string
+        slotNumber:
+          type: integer
+        startTime:
+          type: string
+        endTime:
+          type: string
+        maxPeopleForSlot:
+          type: integer
+        isAvailable:
+          type: boolean
+        hasManyBookings:
+          type: boolean
+        numberOfBookings:
+          type: integer
+        numberOfCars:
+          type: integer
+        numberOfAdults:
+          type: integer
+        numberOfKids:
+          type: integer
+        isOpen:
+          type: boolean
+
+    EmailTemplate:
+      type: object
+      required:
+        - templateId
+        - type
+        - name
+        - subject
+        - body
+      properties:
+        templateId:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          description: Unique template ID (immutable after create)
+          example: "bk-conf-v1"
+        type:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          description: Template type, e.g. booking-confirmation
+          example: "booking-confirmation"
+        name:
+          type: string
+          description: Human-readable name
+          example: "Bokningsbekräftelse v1"
+        subject:
+          type: string
+          description: Email subject with {{placeholders}}
+          example: "Bokningsbekräftelse Lustiga Landet"
+        body:
+          type: string
+          description: Email body with {{placeholders}}
+          example: "Hej!\nTack för din bokning {{dateStr}} kl {{timeStr}}"
+        active:
+          type: boolean
+          description: Whether this template is the active one for its type
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        updated:
+          type: string
+          format: date-time
+          readOnly: true
+
+    EmailPlaceholder:
+      type: object
+      properties:
+        key:
+          type: string
+          example: "dateStr"
+        placeholder:
+          type: string
+          example: "{{dateStr}}"
+        description:
+          type: string
+          example: "Bokningsdatum (format: YYYYMMDD)"
+        exampleValue:
+          type: string
+          example: "20260315"
+
+    EmailTemplateListResponse:
+      type: object
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplate'
+        placeholders:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailPlaceholder'
+
+    EmailTemplateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        templateId:
+          type: string
+        errorMsg:
+          type: string
+
+    SlotConfigTimeSlot:
+      type: object
+      required:
+        - startTime
+        - endTime
+        - maxPeopleForSlot
+      properties:
+        startTime:
+          type: string
+          example: "10:00"
+          description: "HH:MM"
+        endTime:
+          type: string
+          example: "13:00"
+          description: "HH:MM, must be > startTime"
+        maxPeopleForSlot:
+          type: integer
+          minimum: 0
+          maximum: 500
+
+    SlotConfig:
+      type: object
+      required:
+        - dateStr
+        - isOpen
+        - timeSlots
+      properties:
+        dateStr:
+          type: string
+          pattern: '^\d{8}$'
+          example: "20260715"
+          description: "YYYYMMDD, primary key"
+        isOpen:
+          type: boolean
+        timeSlots:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SlotConfigTimeSlot'
+        created:
+          type: string
+          readOnly: true
+          description: ISO 8601, Europe/Stockholm
+        updated:
+          type: string
+          readOnly: true
+
+    SlotConfigResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        dateStr:
+          type: string
+        errorMsg:
+          type: string
+
+paths:
+  /ping:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Server is alive
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "pong"
+
+  /bookings:
+    post:
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+      responses:
+        '200':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+    get:
+      summary: List all bookings
+      security:
+        - adminAuth: []
+      parameters:
+        - name: d
+          in: query
+          schema:
+            type: string
+          description: Filter by date (YYYYMMDD)
+        - name: t
+          in: query
+          schema:
+            type: string
+          description: Filter by time (HH:mm)
+      responses:
+        '200':
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}:
+    get:
+      summary: Get a specific booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+    
+    put:
+      summary: Update a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+      responses:
+        '200':
+          description: Booking updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+  /bookings/{bookingId}/checkin:
+    get:
+      summary: Mark a booking as checked in
+      security:
+        - adminAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking marked as checked in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /bookings/{bookingId}/remove:
+    get:
+      summary: Mark a booking as removed
+      security:
+        - adminAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking marked as removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /slots:
+    get:
+      summary: Get all slot statuses
+      parameters:
+        - name: admin
+          in: query
+          schema:
+            type: string
+          description: Admin token for additional slot details
+      responses:
+        '200':
+          description: List of slot statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlotStatus'
+
+  /report:
+    get:
+      summary: Get booking report
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Booking report text
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /email-templates:
+    get:
+      summary: List all email templates
+      description: Returns all templates and available placeholders (for admin help text)
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Templates and placeholder metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateListResponse'
+        '400':
+          description: Not authorized
+
+    post:
+      summary: Create a new email template
+      description: If active is true, other templates of the same type are deactivated
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplate'
+      responses:
+        '200':
+          description: Template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+        '400':
+          description: Validation error or not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+
+  /email-templates/active:
+    get:
+      summary: List only currently active email templates
+      description: Returns every template where active=true (at most one per type by invariant).
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Array of active templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmailTemplate'
+        '400':
+          description: Not authorized
+
+  /email-templates/{templateId}:
+    get:
+      summary: Get a specific email template
+      security:
+        - adminAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplate'
+        '404':
+          description: Template not found
+        '400':
+          description: Not authorized
+
+    put:
+      summary: Update an email template
+      description: If active is set to true, other templates of the same type are deactivated
+      security:
+        - adminAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                subject:
+                  type: string
+                body:
+                  type: string
+                active:
+                  type: boolean
+      responses:
+        '200':
+          description: Template updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+        '404':
+          description: Template not found
+        '400':
+          description: Not authorized
+
+    delete:
+      summary: Delete an email template
+      security:
+        - adminAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+        '404':
+          description: Template not found
+        '400':
+          description: Not authorized
+
+  /slot-configs:
+    get:
+      summary: List all slot configurations (one per calendar day)
+      security:
+        - adminAuth: []
+      responses:
+        '200':
+          description: Array of slot configs, sorted by dateStr ascending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlotConfig'
+        '400':
+          description: Not authorized
+
+    post:
+      summary: Create a slot configuration for a date
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotConfig'
+      responses:
+        '200':
+          description: Slot config created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotConfigResponse'
+        '400':
+          description: Validation error, duplicate, or not authorized
+
+  /slot-configs/{dateStr}:
+    get:
+      summary: Get a slot config by dateStr
+      security:
+        - adminAuth: []
+      parameters:
+        - name: dateStr
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+          example: "20260715"
+      responses:
+        '200':
+          description: Slot config found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotConfig'
+        '404':
+          description: Not found
+        '400':
+          description: Not authorized
+
+    put:
+      summary: Update a slot config (partial — merges with existing)
+      security:
+        - adminAuth: []
+      parameters:
+        - name: dateStr
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isOpen:
+                  type: boolean
+                timeSlots:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SlotConfigTimeSlot'
+      responses:
+        '200':
+          description: Slot config updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotConfigResponse'
+        '404':
+          description: Not found
+        '400':
+          description: Validation error or not authorized
+
+    delete:
+      summary: Delete a slot config
+      security:
+        - adminAuth: []
+      parameters:
+        - name: dateStr
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{8}$'
+      responses:
+        '200':
+          description: Slot config deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotConfigResponse'
+        '404':
+          description: Not found
+        '400':
+          description: Not authorized
