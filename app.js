@@ -13,6 +13,35 @@ const STAGES = {
   dev: "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1",
   prod: "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1",
 };
+
+// Wrapper that surfaces backend error details. Throws an Error whose
+// .message is the API's errorMsg when present (HTTP error or success:false),
+// otherwise "HTTP <status>" or the underlying network message.
+function fetchJson(url, init) {
+  return fetch(url, init).then(function (res) {
+    return res.text().then(function (text) {
+      var body = null;
+      if (text) { try { body = JSON.parse(text); } catch (e) {} }
+      if (!res.ok) {
+        var msg = (body && (body.errorMsg || body.message)) ||
+          (text && text.length < 200 ? text : "") ||
+          ("HTTP " + res.status);
+        var err = new Error(msg);
+        err.status = res.status;
+        err.body = body;
+        console.error("[fetch error]", res.status, url.replace(/admin=[^&]*/g, "admin=***"), body || text);
+        throw err;
+      }
+      if (body && body.success === false) {
+        var err2 = new Error(body.errorMsg || body.errorCode || "Request failed");
+        err2.body = body;
+        console.error("[api success:false]", url.replace(/admin=[^&]*/g, "admin=***"), body);
+        throw err2;
+      }
+      return body;
+    });
+  });
+}
 const STAGE_STORAGE_KEY = "llStage";
 const PWD_STORAGE_KEY = "llAdminPwd";
 
@@ -216,15 +245,14 @@ function fetchBookings() {
 
   return fetchAvailableDates()
     .then(function () {
-      return fetch(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
+      return fetchJson(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
     })
-    .then(function (res) {
-      if (res.status === 400 || res.status === 401 || res.status === 403) {
+    .catch(function (err) {
+      if (err.status === 400 || err.status === 401 || err.status === 403) {
         try { localStorage.removeItem(PWD_STORAGE_KEY); } catch (e) {}
         throw new Error("Wrong password — please log in again.");
       }
-      if (!res.ok) throw new Error("Failed to fetch bookings (HTTP " + res.status + ")");
-      return res.json();
+      throw err;
     })
     .then(function (data) {
       allBookings = Array.isArray(data) ? data : [];
@@ -246,11 +274,7 @@ function fetchBookings() {
 }
 
 function fetchAvailableDates() {
-  return fetch(API_BASE + "/slots?admin=" + encodeURIComponent(adminPwd))
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to fetch available dates");
-      return res.json();
-    })
+  return fetchJson(API_BASE + "/slots?admin=" + encodeURIComponent(adminPwd))
     .then(function (data) {
       slotStatusesByDate = {};
       var dateSet = new Set();
@@ -504,19 +528,19 @@ function updateBookingField(bookingId, field, value, selectEl) {
   }
   booking[field] = value;
   var url = API_BASE + "/bookings/" + bookingId + "?admin=" + encodeURIComponent(adminPwd);
-  fetch(url, {
+  fetchJson(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(booking),
   })
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to save booking");
+    .then(function () {
+      errorDiv.textContent = "";
       showToast("Updated " + field + " for " + booking.name);
       renderTable();
       renderPagination();
     })
     .catch(function (err) {
-      alert(err.message);
+      errorDiv.textContent = "Save failed (" + field + " for " + booking.name + "): " + err.message;
       selectEl.disabled = false;
     })
     .finally(hideUpdateModal);
@@ -553,11 +577,7 @@ function fetchEmailTemplates() {
   emailError.textContent = "";
   templatesList.innerHTML = '<div class="empty-state">Loading templates...</div>';
 
-  return fetch(API_BASE + "/email-templates?admin=" + encodeURIComponent(adminPwd))
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to fetch email templates");
-      return res.json();
-    })
+  return fetchJson(API_BASE + "/email-templates?admin=" + encodeURIComponent(adminPwd))
     .then(function (data) {
       allTemplates = data.templates || [];
       allPlaceholders = data.placeholders || [];
@@ -753,15 +773,11 @@ saveTemplateBtn.addEventListener("click", function () {
 
   if (editingTemplateId) {
     // PUT update
-    fetch(API_BASE + "/email-templates/" + editingTemplateId + "?admin=" + encodeURIComponent(adminPwd), {
+    fetchJson(API_BASE + "/email-templates/" + editingTemplateId + "?admin=" + encodeURIComponent(adminPwd), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name, subject: subject, body: body, active: active }),
     })
-      .then(function (res) {
-        if (!res.ok) throw new Error("Failed to update template");
-        return res.json();
-      })
       .then(function () {
         closeEditor();
         showToast('Template "' + name + '" updated.');
@@ -774,15 +790,11 @@ saveTemplateBtn.addEventListener("click", function () {
   } else {
     // POST create — use type as templateId
     var templateId = type;
-    fetch(API_BASE + "/email-templates?admin=" + encodeURIComponent(adminPwd), {
+    fetchJson(API_BASE + "/email-templates?admin=" + encodeURIComponent(adminPwd), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ templateId: templateId, type: type, name: name, subject: subject, body: body, active: active }),
     })
-      .then(function (res) {
-        if (!res.ok) throw new Error("Failed to create template");
-        return res.json();
-      })
       .then(function () {
         closeEditor();
         showToast('Template "' + name + '" created.');
@@ -840,11 +852,7 @@ function formatDateStrLong(dateStr) {
 
 function fetchSlotConfigs() {
   slotsError.textContent = "";
-  return fetch(API_BASE + "/slot-configs?admin=" + encodeURIComponent(adminPwd))
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to fetch slot configs");
-      return res.json();
-    })
+  return fetchJson(API_BASE + "/slot-configs?admin=" + encodeURIComponent(adminPwd))
     .then(function (data) {
       slotConfigByDate = {};
       (Array.isArray(data) ? data : []).forEach(function (cfg) {
@@ -1075,15 +1083,11 @@ function saveSelectedDay() {
   }
 
   showUpdateModal();
-  fetch(url, {
+  fetchJson(url, {
     method: method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to save slot config");
-      return res.json();
-    })
     .then(function () {
       showToast("Saved " + formatDateStr(selectedDateStr));
       return Promise.all([fetchSlotConfigs(), fetchAvailableDates()]);
@@ -1096,13 +1100,9 @@ function saveSelectedDay() {
 function deleteSlotConfig(dateStr) {
   if (!confirm("Delete slot config for " + formatDateStr(dateStr) + "?")) return;
   showUpdateModal();
-  fetch(API_BASE + "/slot-configs/" + dateStr + "?admin=" + encodeURIComponent(adminPwd), {
+  fetchJson(API_BASE + "/slot-configs/" + dateStr + "?admin=" + encodeURIComponent(adminPwd), {
     method: "DELETE",
   })
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to delete slot config");
-      return res.json();
-    })
     .then(function () {
       showToast("Slot config deleted.");
       if (selectedDateStr === dateStr) selectedDateStr = null;
