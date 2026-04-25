@@ -102,7 +102,7 @@ body {
 }
 
 .body-stage-dev .app-header {
-  background: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #f59e0b 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #3b82f6 100%);
 }
 
 .app-header::before {
@@ -195,13 +195,13 @@ body {
 
 .stage-badge.stage-dev {
   background: #ffffff;
-  color: #c2410c;
+  color: #1d4ed8;
   border-color: #ffffff;
 }
 
 .stage-badge.stage-dev:hover {
-  background: #fed7aa;
-  border-color: #fed7aa;
+  background: #dbeafe;
+  border-color: #dbeafe;
 }
 
 /* Stats counter (in bookings toolbar) */
