@@ -207,7 +207,11 @@ function fetchBookings() {
       return fetch(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
     })
     .then(function (res) {
-      if (!res.ok) throw new Error("Failed to fetch bookings – check password?");
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        try { localStorage.removeItem(PWD_STORAGE_KEY); } catch (e) {}
+        throw new Error("Wrong password — please log in again.");
+      }
+      if (!res.ok) throw new Error("Failed to fetch bookings (HTTP " + res.status + ")");
       return res.json();
     })
     .then(function (data) {
@@ -226,7 +230,6 @@ function fetchBookings() {
     .catch(function (err) {
       tableContainer.innerHTML = "";
       errorDiv.textContent = err.message;
-      try { localStorage.removeItem(PWD_STORAGE_KEY); } catch (e) {}
     });
 }
 
@@ -1092,6 +1095,7 @@ function escapeHtml(str) {
 
 // ── Stage badge ───────────────────────────────────────────────────
 (function initStageBadge() {
+  document.body.classList.add("body-stage-" + STAGE);
   var badge = document.getElementById("stageBadge");
   if (!badge) return;
   badge.textContent = STAGE.toUpperCase();

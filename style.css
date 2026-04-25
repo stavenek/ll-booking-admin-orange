@@ -97,6 +97,14 @@ body {
   overflow: hidden;
 }
 
+.body-stage-prod .app-header {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #dc2626 100%);
+}
+
+.body-stage-dev .app-header {
+  background: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #f59e0b 100%);
+}
+
 .app-header::before {
   content: '';
   position: absolute;
@@ -175,18 +183,25 @@ body {
 }
 
 .stage-badge.stage-prod {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
+  background: #ffffff;
+  color: #b91c1c;
+  border-color: #ffffff;
 }
 
 .stage-badge.stage-prod:hover {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
+  background: #fee2e2;
+  border-color: #fee2e2;
 }
 
 .stage-badge.stage-dev {
-  background: var(--color-success);
-  border-color: var(--color-success);
+  background: #ffffff;
+  color: #c2410c;
+  border-color: #ffffff;
+}
+
+.stage-badge.stage-dev:hover {
+  background: #fed7aa;
+  border-color: #fed7aa;
 }
 
 /* Stats counter (in bookings toolbar) */
