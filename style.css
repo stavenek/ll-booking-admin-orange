@@ -394,6 +394,50 @@ body {
   display: flex;
 }
 
+.btn-reload {
+  width: var(--min-touch);
+  height: var(--min-touch);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reload:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+
+.btn-reload:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn-reload.loading {
+  pointer-events: none;
+  color: transparent;
+  position: relative;
+}
+
+.btn-reload.loading::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--color-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
 .filter-input {
   width: 100%;
   max-width: 400px;
@@ -1470,7 +1514,7 @@ body {
 /* ── Toast ─────────────────────────────────────────────────────── */
 .toast {
   position: fixed;
-  bottom: 24px;
+  top: 24px;
   right: 24px;
   background: var(--color-header);
   color: #fff;
@@ -1481,7 +1525,7 @@ body {
   box-shadow: var(--shadow-lg);
   z-index: 10001;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(-10px);
   transition: opacity 200ms ease, transform 200ms ease;
   pointer-events: none;
   max-width: 360px;

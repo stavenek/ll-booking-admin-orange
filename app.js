@@ -289,6 +289,17 @@ function fetchAvailableDates() {
 }
 
 // ── Filter ────────────────────────────────────────────────────────
+document.getElementById("reloadBookingsBtn").addEventListener("click", function () {
+  if (!adminPwd) return;
+  var btn = this;
+  btn.disabled = true;
+  btn.classList.add("loading");
+  fetchBookings().finally(function () {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+  });
+});
+
 filterInput.addEventListener("input", function (evt) {
   var term = evt.target.value.toLowerCase();
   filterBookings(term);
