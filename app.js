@@ -308,7 +308,7 @@ function renderTable() {
 
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
-  var headers = ["Date", "Time", "Name", "Adults", "Kids", "Email", "Status", "Created", "ID"];
+  var headers = ["Date", "Time", "Name", "Adults", "Kids", "Pens", "Email", "Status", "Created", "ID"];
 
   var html = '<div class="table-scroll"><table class="booking-table"><thead><tr>';
   headers.forEach(function (h) { html += "<th>" + h + "</th>"; });
@@ -353,8 +353,16 @@ function renderTable() {
 
     // Kids
     html += '<td><select data-idx="' + globalIdx + '" class="kids-select" aria-label="Number of kids for ' + escapeHtml(b.name) + '">';
-    for (var j = 1; j <= 10; j++) {
+    for (var j = 0; j <= 10; j++) {
       html += '<option value="' + j + '"' + (b.numberOfKids == j ? " selected" : "") + ">" + j + "</option>";
+    }
+    html += "</select></td>";
+
+    // Pensioners
+    var pens = (typeof b.numberOfPensioners === "number") ? b.numberOfPensioners : 0;
+    html += '<td><select data-idx="' + globalIdx + '" class="pens-select" aria-label="Number of pensioners for ' + escapeHtml(b.name) + '">';
+    for (var k = 0; k <= 10; k++) {
+      html += '<option value="' + k + '"' + (pens == k ? " selected" : "") + ">" + k + "</option>";
     }
     html += "</select></td>";
 
@@ -417,6 +425,16 @@ function attachSelectListeners(sortedBookings) {
       var val = parseInt(this.value);
       if (!booking || booking.numberOfKids === val) return;
       updateBookingField(booking.bookingId, "numberOfKids", val, this);
+    });
+  });
+
+  document.querySelectorAll(".pens-select").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      var booking = sortedBookings[parseInt(this.getAttribute("data-idx"))];
+      var val = parseInt(this.value);
+      var current = (typeof booking.numberOfPensioners === "number") ? booking.numberOfPensioners : 0;
+      if (!booking || current === val) return;
+      updateBookingField(booking.bookingId, "numberOfPensioners", val, this);
     });
   });
 
