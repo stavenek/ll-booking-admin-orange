@@ -1,3 +1,14 @@
+(function logFetches() {
+  var orig = window.fetch;
+  window.fetch = function (input, init) {
+    var url = typeof input === "string" ? input : (input && input.url) || String(input);
+    var method = (init && init.method) || (typeof input !== "string" && input && input.method) || "GET";
+    var safe = url.replace(/admin=[^&]*/g, "admin=***");
+    console.log("[fetch]", method, safe);
+    return orig.apply(this, arguments);
+  };
+})();
+
 const STAGES = {
   dev: "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1",
   prod: "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1",
