@@ -1,8 +1,27 @@
 openapi: 3.0.0
 info:
   title: Lustiga Landet Booking API
-  version: 2.0.0
-  description: API for managing bookings at Lustiga Landet
+  version: 3.0.0
+  description: |
+    API for managing bookings at Lustiga Landet.
+
+    ## Authentication
+    Admin endpoints require `?admin=<key>` (apiKey scheme `adminAuth`).
+    Only the following endpoints are publicly accessible (no auth required):
+
+    - `GET /ping`
+    - `GET /slots` — anon sees basic fields; `?admin=…` enriches with
+      headcounts per slot
+    - `GET /report` — anon receives the literal string `"not auth"`;
+      `?admin=…` returns the real report
+    - `POST /bookings` — customer-facing; server hard-codes status=NEW
+    - `GET /bookings` — anon receives an empty array; `?admin=…` returns
+      the full list (the endpoint is admin-only in spirit, but anon
+      callers are served `[]` rather than rejected)
+
+    All other endpoints, including `GET /bookings/{bookingId}` and
+    `PUT /bookings/{bookingId}`, are admin-only. Unauthorized callers
+    receive HTTP 400 with body `"not auth"`.
 
 servers:
   - url: https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1
@@ -73,7 +92,11 @@ components:
         status:
           type: string
           enum: [NEW, CHECKED_IN, REMOVED]
-          readOnly: true
+          description: |
+            Booking status. On POST /bookings the server always sets it to
+            NEW (any value sent by the client is ignored). On PUT
+            /bookings/{bookingId} it is writable by admins (the endpoint
+            requires `?admin=…` since v3.0.0).
         created:
           type: string
           format: date-time
@@ -81,15 +104,28 @@ components:
 
     BookingResponse:
       type: object
+      required:
+        - success
       properties:
         success:
           type: boolean
         bookingId:
           type: string
+        status:
+          type: string
+          description: |
+            Legacy field present on mark*-endpoint success responses with the
+            literal value "ok". Kept for backward compatibility with older
+            clients; new clients should rely on `success` instead.
+          example: "ok"
         errorMsg:
           type: string
         errorCode:
           type: string
+          description: |
+            Machine-readable error code. Currently only `NOT_FOUND` and
+            `EMAIL_PROBLEM_SENDING` are emitted; absence means a generic
+            validation/business-rule failure (see errorMsg).
 
     SlotStatus:
       type: object
@@ -340,7 +376,9 @@ paths:
 
   /bookings/{bookingId}:
     get:
-      summary: Get a specific booking
+      summary: Get a specific booking (admin only)
+      security:
+        - adminAuth: []
       parameters:
         - name: bookingId
           in: path
@@ -354,11 +392,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
+        '400':
+          description: Not authorized (body = `"not auth"`)
         '404':
           description: Booking not found
-    
+
     put:
-      summary: Update a booking
+      summary: Update a booking (admin only)
+      description: |
+        Partial update — fields omitted in the body keep their existing
+        values. Identity fields (`id`, `bookingId`, `created`) are always
+        preserved. `status` is writable by admins. On
+        validation/business-rule failure returns HTTP 400; if the booking
+        does not exist returns 404 with `errorCode: "NOT_FOUND"`.
+      security:
+        - adminAuth: []
       parameters:
         - name: bookingId
           in: path
@@ -374,6 +422,21 @@ paths:
       responses:
         '200':
           description: Booking updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: |
+            Either not authorized (body = `"not auth"`) or a
+            validation/business-rule failure (party-size limits, slot
+            not open, invalid status, …) with a `BookingResponse` body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '404':
+          description: Booking not found (errorCode = NOT_FOUND)
           content:
             application/json:
               schema:
@@ -396,11 +459,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Not authorized
+        '404':
+          description: Booking not found (errorCode = NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
 
   /bookings/{bookingId}/remove:
     get:
@@ -419,21 +486,26 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Not authorized
+        '404':
+          description: Booking not found (errorCode = NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
 
   /slots:
     get:
       summary: Get all slot statuses
-      parameters:
-        - name: admin
-          in: query
-          schema:
-            type: string
-          description: Admin token for additional slot details
+      description: |
+        Public endpoint. Anonymous callers receive the basic slot fields
+        (open/availability flags). With `?admin=…` the response also
+        includes per-slot headcounts (cars, adults, kids, pensioners).
+      security:
+        - {}
+        - adminAuth: []
       responses:
         '200':
           description: List of slot statuses
@@ -447,11 +519,16 @@ paths:
   /report:
     get:
       summary: Get booking report
+      description: |
+        Anonymous callers receive HTTP 200 with the literal string
+        `"not auth"`. With `?admin=…` returns the real Swedish-language
+        textual report (per-slot summaries plus daily totals).
       security:
+        - {}
         - adminAuth: []
       responses:
         '200':
-          description: Booking report text
+          description: Booking report text (or the literal "not auth" for anon callers)
           content:
             text/plain:
               schema:
