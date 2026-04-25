@@ -442,10 +442,8 @@ function attachSelectListeners(sortedBookings) {
     sel.addEventListener("change", function () {
       var booking = sortedBookings[parseInt(this.getAttribute("data-idx"))];
       if (!booking || booking.status === this.value) return;
-      var newStatus = this.value;
-      var prevStatus = booking.status;
-      this.setAttribute("data-status", newStatus);
-      updateBookingStatus(booking, newStatus, prevStatus, this);
+      this.setAttribute("data-status", this.value);
+      updateBookingField(booking.bookingId, "status", this.value, this);
     });
   });
 
@@ -489,40 +487,6 @@ function showUpdateModal() {
 
 function hideUpdateModal() {
   updateModal.classList.remove("visible");
-}
-
-// ── Booking status update (uses dedicated endpoints) ──────────────
-function updateBookingStatus(booking, newStatus, prevStatus, selectEl) {
-  var endpoint;
-  if (newStatus === "CHECKED_IN") endpoint = "/checkin";
-  else if (newStatus === "REMOVED") endpoint = "/remove";
-  else {
-    alert("Cannot transition to NEW — only CHECKED_IN and REMOVED are supported by the API.");
-    selectEl.value = prevStatus;
-    selectEl.setAttribute("data-status", prevStatus);
-    return;
-  }
-  selectEl.disabled = true;
-  showUpdateModal();
-  var url = API_BASE + "/bookings/" + booking.bookingId + endpoint + "?admin=" + encodeURIComponent(adminPwd);
-  fetch(url)
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to update status (HTTP " + res.status + ")");
-      return res.json();
-    })
-    .then(function () {
-      booking.status = newStatus;
-      showToast("Status set to " + newStatus + " for " + booking.name);
-      renderTable();
-      renderPagination();
-    })
-    .catch(function (err) {
-      alert(err.message);
-      selectEl.value = prevStatus;
-      selectEl.setAttribute("data-status", prevStatus);
-      selectEl.disabled = false;
-    })
-    .finally(hideUpdateModal);
 }
 
 // ── Booking field update ──────────────────────────────────────────
