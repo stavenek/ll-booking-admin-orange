@@ -127,7 +127,6 @@ const calNextBtn = document.getElementById("calNextBtn");
 const dayDetail = document.getElementById("dayDetail");
 const emailError = document.getElementById("emailError");
 const templatesList = document.getElementById("templatesList");
-const addTemplateBtn = document.getElementById("addTemplateBtn");
 const updateModal = document.getElementById("updateModal");
 const editorModal = document.getElementById("editorModal");
 const editorTitle = document.getElementById("editorTitle");
@@ -511,7 +510,7 @@ function renderTemplatesList() {
   templatesList.innerHTML = "";
   var activeTemplates = allTemplates.filter(function (t) { return t.active; });
   if (activeTemplates.length === 0) {
-    templatesList.innerHTML = '<div class="empty-state">No active templates. Create a new one to get started.</div>';
+    templatesList.innerHTML = '<div class="empty-state">No active templates.</div>';
     return;
   }
 
@@ -533,25 +532,11 @@ function renderTemplatesList() {
           (tpl.updated ? " &middot; Updated: " + new Date(tpl.updated).toLocaleString() : "") +
         "</div>" +
         '<div class="template-subject">Subject: ' + escapeHtml(tpl.subject) + "</div>" +
-      "</div>" +
-      '<div class="template-actions">' +
-        '<button class="btn-delete" type="button" aria-label="Delete template ' + escapeHtml(tpl.name) + '">Delete</button>' +
       "</div>";
 
-    // Click on card to edit
-    card.addEventListener("click", function (evt) {
-      if (evt.target.closest(".btn-delete")) return;
-      openEditor(tpl);
-    });
+    card.addEventListener("click", function () { openEditor(tpl); });
     card.addEventListener("keydown", function (evt) {
-      if (evt.key === "Enter" && !evt.target.closest(".btn-delete")) {
-        openEditor(tpl);
-      }
-    });
-
-    card.querySelector(".btn-delete").addEventListener("click", function (evt) {
-      evt.stopPropagation();
-      deleteTemplate(tpl.templateId);
+      if (evt.key === "Enter") openEditor(tpl);
     });
 
     templatesList.appendChild(card);
@@ -672,7 +657,6 @@ function closeEditor() {
   editingTemplateId = null;
 }
 
-addTemplateBtn.addEventListener("click", function () { openEditor(null); });
 cancelTemplateBtn.addEventListener("click", closeEditor);
 editorCloseBtn.addEventListener("click", closeEditor);
 
@@ -747,26 +731,6 @@ saveTemplateBtn.addEventListener("click", function () {
       .finally(hideUpdateModal);
   }
 });
-
-function deleteTemplate(templateId) {
-  if (!confirm('Delete template "' + templateId + '"?')) return;
-  showUpdateModal();
-  fetch(API_BASE + "/email-templates/" + templateId + "?admin=" + encodeURIComponent(adminPwd), {
-    method: "DELETE",
-  })
-    .then(function (res) {
-      if (!res.ok) throw new Error("Failed to delete template");
-      return res.json();
-    })
-    .then(function () {
-      showToast('Template deleted.');
-      fetchEmailTemplates();
-    })
-    .catch(function (err) {
-      emailError.textContent = err.message;
-    })
-    .finally(hideUpdateModal);
-}
 
 // ── Toast notification ────────────────────────────────────────────
 function showToast(message) {
