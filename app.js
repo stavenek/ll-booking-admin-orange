@@ -347,7 +347,7 @@ function renderTable() {
     // Adults
     html += '<td><select data-idx="' + globalIdx + '" class="adults-select" aria-label="Number of adults for ' + escapeHtml(b.name) + '">';
     for (var i = 1; i <= 10; i++) {
-      html += '<option value="' + i + '"' + (b.numberOfPeople == i ? " selected" : "") + ">" + i + "</option>";
+      html += '<option value="' + i + '"' + (b.numberOfAdults == i ? " selected" : "") + ">" + i + "</option>";
     }
     html += "</select></td>";
 
@@ -406,8 +406,8 @@ function attachSelectListeners(sortedBookings) {
     sel.addEventListener("change", function () {
       var booking = sortedBookings[parseInt(this.getAttribute("data-idx"))];
       var val = parseInt(this.value);
-      if (!booking || booking.numberOfPeople === val) return;
-      updateBookingField(booking.bookingId, "numberOfPeople", val, this);
+      if (!booking || booking.numberOfAdults === val) return;
+      updateBookingField(booking.bookingId, "numberOfAdults", val, this);
     });
   });
 
@@ -424,8 +424,10 @@ function attachSelectListeners(sortedBookings) {
     sel.addEventListener("change", function () {
       var booking = sortedBookings[parseInt(this.getAttribute("data-idx"))];
       if (!booking || booking.status === this.value) return;
-      this.setAttribute("data-status", this.value);
-      updateBookingField(booking.bookingId, "status", this.value, this);
+      var newStatus = this.value;
+      var prevStatus = booking.status;
+      this.setAttribute("data-status", newStatus);
+      updateBookingStatus(booking, newStatus, prevStatus, this);
     });
   });
 
@@ -469,6 +471,40 @@ function showUpdateModal() {
 
 function hideUpdateModal() {
   updateModal.classList.remove("visible");
+}
+
+// ── Booking status update (uses dedicated endpoints) ──────────────
+function updateBookingStatus(booking, newStatus, prevStatus, selectEl) {
+  var endpoint;
+  if (newStatus === "CHECKED_IN") endpoint = "/checkin";
+  else if (newStatus === "REMOVED") endpoint = "/remove";
+  else {
+    alert("Cannot transition to NEW — only CHECKED_IN and REMOVED are supported by the API.");
+    selectEl.value = prevStatus;
+    selectEl.setAttribute("data-status", prevStatus);
+    return;
+  }
+  selectEl.disabled = true;
+  showUpdateModal();
+  var url = API_BASE + "/bookings/" + booking.bookingId + endpoint + "?admin=" + encodeURIComponent(adminPwd);
+  fetch(url)
+    .then(function (res) {
+      if (!res.ok) throw new Error("Failed to update status (HTTP " + res.status + ")");
+      return res.json();
+    })
+    .then(function () {
+      booking.status = newStatus;
+      showToast("Status set to " + newStatus + " for " + booking.name);
+      renderTable();
+      renderPagination();
+    })
+    .catch(function (err) {
+      alert(err.message);
+      selectEl.value = prevStatus;
+      selectEl.setAttribute("data-status", prevStatus);
+      selectEl.disabled = false;
+    })
+    .finally(hideUpdateModal);
 }
 
 // ── Booking field update ──────────────────────────────────────────
