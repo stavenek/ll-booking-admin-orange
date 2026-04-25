@@ -529,14 +529,52 @@ body {
 }
 
 .cell-name {
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
   white-space: nowrap;
 }
 
 .cell-email {
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+.booking-table input.name-input,
+.booking-table input.email-input {
+  padding: var(--space-xs) var(--space-sm);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  background: var(--color-surface);
+  color: var(--color-text);
+  min-height: var(--min-touch);
+  width: 100%;
+  min-width: 140px;
+  transition: border-color var(--transition-fast);
+}
+
+.booking-table input.name-input {
+  font-weight: var(--font-weight-bold);
+}
+
+.booking-table input.email-input {
+  color: var(--color-text-secondary);
+  min-width: 180px;
+}
+
+.booking-table input.name-input:focus,
+.booking-table input.email-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.booking-table input.name-input:hover:not(:disabled),
+.booking-table input.email-input:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.booking-table input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cell-id {

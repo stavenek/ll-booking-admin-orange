@@ -331,7 +331,7 @@ function renderTable() {
     html += "</select></td>";
 
     // Name
-    html += '<td class="cell-name">' + escapeHtml(b.name) + "</td>";
+    html += '<td class="cell-name"><input type="text" data-idx="' + globalIdx + '" class="name-input" value="' + escapeAttr(b.name) + '" aria-label="Name for booking" /></td>';
 
     // Adults
     html += '<td><select data-idx="' + globalIdx + '" class="adults-select" aria-label="Number of adults for ' + escapeHtml(b.name) + '">';
@@ -348,7 +348,7 @@ function renderTable() {
     html += "</select></td>";
 
     // Email
-    html += '<td class="cell-email">' + escapeHtml(b.email) + "</td>";
+    html += '<td class="cell-email"><input type="email" data-idx="' + globalIdx + '" class="email-input" value="' + escapeAttr(b.email) + '" aria-label="Email for booking" /></td>';
 
     // Status
     html += '<td><select data-idx="' + globalIdx + '" class="status-select" data-status="' + status + '" aria-label="Status for ' + escapeHtml(b.name) + '">';
@@ -415,6 +415,38 @@ function attachSelectListeners(sortedBookings) {
       if (!booking || booking.status === this.value) return;
       this.setAttribute("data-status", this.value);
       updateBookingField(booking.bookingId, "status", this.value, this);
+    });
+  });
+
+  attachTextInputListener(".name-input", "name", sortedBookings, function (v) {
+    return v.trim() ? v.trim() : null;
+  });
+
+  attachTextInputListener(".email-input", "email", sortedBookings, function (v) {
+    var trimmed = v.trim();
+    if (!trimmed) return null;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
+    return trimmed;
+  });
+}
+
+function attachTextInputListener(selector, field, sortedBookings, validate) {
+  document.querySelectorAll(selector).forEach(function (input) {
+    var initial = input.value;
+    input.addEventListener("blur", function () {
+      var validated = validate(this.value);
+      if (validated == null) { this.value = initial; return; }
+      var booking = sortedBookings[parseInt(this.getAttribute("data-idx"))];
+      if (!booking || booking[field] === validated) {
+        this.value = validated;
+        return;
+      }
+      this.value = validated;
+      updateBookingField(booking.bookingId, field, validated, this);
+    });
+    input.addEventListener("keydown", function (evt) {
+      if (evt.key === "Enter") this.blur();
+      if (evt.key === "Escape") { this.value = initial; this.blur(); }
     });
   });
 }
@@ -1055,6 +1087,14 @@ function escapeHtml(str) {
   var div = document.createElement("div");
   div.appendChild(document.createTextNode(str));
   return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // ── Stage badge ───────────────────────────────────────────────────
