@@ -98,7 +98,7 @@ body {
 }
 
 .body-stage-prod .app-header {
-  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #dc2626 100%);
+  background: linear-gradient(135deg, #831843 0%, #be185d 50%, #ec4899 100%);
 }
 
 .body-stage-dev .app-header {
@@ -184,13 +184,13 @@ body {
 
 .stage-badge.stage-prod {
   background: #ffffff;
-  color: #b91c1c;
+  color: #be185d;
   border-color: #ffffff;
 }
 
 .stage-badge.stage-prod:hover {
-  background: #fee2e2;
-  border-color: #fee2e2;
+  background: #fce7f3;
+  border-color: #fce7f3;
 }
 
 .stage-badge.stage-dev {
