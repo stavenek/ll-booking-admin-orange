@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Lustiga Landet Booking API
-  version: 1.0.0
+  version: 2.0.0
   description: API for managing bookings at Lustiga Landet
 
 servers:
@@ -24,8 +24,9 @@ components:
         - timeStr
         - name
         - numberOfCars
-        - numberOfPeople
+        - numberOfAdults
         - numberOfKids
+        - numberOfPensioners
         - email
         - gdpr
       properties:
@@ -45,9 +46,9 @@ components:
           minimum: 0
           maximum: 5
           description: Number of cars (max 5)
-        numberOfPeople:
+        numberOfAdults:
           type: integer
-          minimum: 1
+          minimum: 0
           maximum: 10
           description: Number of adults (max 10)
         numberOfKids:
@@ -55,6 +56,11 @@ components:
           minimum: 0
           maximum: 10
           description: Number of children (max 10)
+        numberOfPensioners:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of pensioners (max 10)
         email:
           type: string
           format: email
@@ -114,6 +120,8 @@ components:
           type: integer
         numberOfKids:
           type: integer
+        numberOfPensioners:
+          type: integer
         isOpen:
           type: boolean
 
@@ -162,19 +170,33 @@ components:
 
     EmailPlaceholder:
       type: object
+      description: |
+        A placeholder token that can be inserted into email template subjects or bodies.
+        At send-time, `{{key}}` is replaced by the matching booking field.
+
+        Available keys (as returned by GET /email-templates):
+        - `dateStr` — YYYYMMDD
+        - `timeStr` — HH:mm
+        - `bookingId` — 5-char booking reference
+        - `name` — customer name
+        - `email` — customer email
+        - `numberOfAdults` — integer count
+        - `numberOfKids` — integer count
+        - `numberOfPensioners` — integer count
+        - `numberOfCars` — integer count
       properties:
         key:
           type: string
-          example: "dateStr"
+          example: "numberOfAdults"
         placeholder:
           type: string
-          example: "{{dateStr}}"
+          example: "{{numberOfAdults}}"
         description:
           type: string
-          example: "Bokningsdatum (format: YYYYMMDD)"
+          example: "Antal vuxna"
         exampleValue:
           type: string
-          example: "20260315"
+          example: "2"
 
     EmailTemplateListResponse:
       type: object
