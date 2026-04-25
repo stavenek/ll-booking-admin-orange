@@ -308,7 +308,7 @@ function renderTable() {
 
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
-  var headers = ["Date", "Time", "Name", "Adults", "Kids", "Pens", "Email", "Status", "Created", "ID"];
+  var headers = ["Date", "Time", "Name", "Email", "Adults", "Kids", "Pens", "Status", "Created", "ID"];
 
   var html = '<div class="table-scroll"><table class="booking-table"><thead><tr>';
   headers.forEach(function (h) { html += "<th>" + h + "</th>"; });
@@ -344,6 +344,9 @@ function renderTable() {
     // Name
     html += '<td class="cell-name"><input type="text" data-idx="' + globalIdx + '" class="name-input" value="' + escapeAttr(b.name) + '" aria-label="Name for booking" /></td>';
 
+    // Email
+    html += '<td class="cell-email"><input type="email" data-idx="' + globalIdx + '" class="email-input" value="' + escapeAttr(b.email) + '" aria-label="Email for booking" /></td>';
+
     // Adults
     html += '<td><select data-idx="' + globalIdx + '" class="adults-select" aria-label="Number of adults for ' + escapeHtml(b.name) + '">';
     for (var i = 1; i <= 10; i++) {
@@ -365,9 +368,6 @@ function renderTable() {
       html += '<option value="' + k + '"' + (pens == k ? " selected" : "") + ">" + k + "</option>";
     }
     html += "</select></td>";
-
-    // Email
-    html += '<td class="cell-email"><input type="email" data-idx="' + globalIdx + '" class="email-input" value="' + escapeAttr(b.email) + '" aria-label="Email for booking" /></td>';
 
     // Status
     html += '<td><select data-idx="' + globalIdx + '" class="status-select" data-status="' + status + '" aria-label="Status for ' + escapeHtml(b.name) + '">';
