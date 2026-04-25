@@ -15,6 +15,7 @@
         <h1 class="app-title">
           <span>Lustiga Landet</span>
           Booking Admin
+          <button class="stage-badge" id="stageBadge" type="button" aria-label="Toggle environment"></button>
         </h1>
         <div class="password-form" id="passwordForm">
           <label for="pwd">Admin password:</label>
@@ -104,6 +105,11 @@
       </div>
       <div class="error-message" id="editorError" role="alert"></div>
       <div class="editor-body">
+        <aside class="editor-aside editor-aside-left">
+          <div class="sidebar-title">Placeholders</div>
+          <p class="sidebar-hint">Click to insert at cursor</p>
+          <div class="placeholder-list" id="placeholderList"></div>
+        </aside>
         <div class="template-form">
           <div class="form-field">
             <label for="tplType">Type</label>
@@ -137,11 +143,18 @@
             <button class="btn-cancel" id="cancelTemplateBtn" type="button">Cancel</button>
           </div>
         </div>
-        <div class="editor-sidebar" id="editorSidebar">
-          <div class="sidebar-title">Placeholders</div>
-          <p class="sidebar-hint">Click to insert at cursor</p>
-          <div class="placeholder-list" id="placeholderList"></div>
-        </div>
+        <aside class="editor-aside editor-aside-right" id="editorSidebar">
+          <div class="sidebar-title">Preview</div>
+          <p class="sidebar-hint">Live preview with example values</p>
+          <div class="email-preview" id="emailPreview">
+            <div class="preview-meta">
+              <div><span class="preview-meta-label">From</span><span>Lustiga Landet &lt;noreply@lustigalandet.se&gt;</span></div>
+              <div><span class="preview-meta-label">To</span><span id="previewTo">anna@example.com</span></div>
+            </div>
+            <div class="preview-subject" id="previewSubject"></div>
+            <div class="preview-body" id="previewBody"></div>
+          </div>
+        </aside>
       </div>
     </div>
   </div>

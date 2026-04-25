@@ -1,7 +1,26 @@
-const API_BASE =
-  "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1";
-  //"https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1";
+const STAGES = {
+  dev: "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1",
+  prod: "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1",
+};
+const STAGE_STORAGE_KEY = "llStage";
 const PWD_STORAGE_KEY = "llAdminPwd";
+
+function resolveStage() {
+  var params = new URLSearchParams(window.location.search);
+  var fromUrl = params.get("stage");
+  if (fromUrl && STAGES[fromUrl]) {
+    try { localStorage.setItem(STAGE_STORAGE_KEY, fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try {
+    var stored = localStorage.getItem(STAGE_STORAGE_KEY);
+    if (stored && STAGES[stored]) return stored;
+  } catch (e) {}
+  return location.hostname.endsWith(".github.io") ? "prod" : "dev";
+}
+
+const STAGE = resolveStage();
+const API_BASE = STAGES[STAGE];
 let adminPwd = "";
 let allBookings = [];
 let filteredBookings = [];
@@ -132,6 +151,18 @@ function switchTab(tabName) {
   bookingsPanel.classList.toggle("visible", tabName === "bookings");
   templatesPanel.classList.toggle("visible", tabName === "templates");
   slotsPanel.classList.toggle("visible", tabName === "slots");
+  if (tabName === "slots" && adminPwd) {
+    refreshSlotCounts();
+  }
+}
+
+function refreshSlotCounts() {
+  return fetchAvailableDates()
+    .then(function () {
+      renderCalendar();
+      if (selectedDateStr) renderDayDetail();
+    })
+    .catch(function () {});
 }
 
 navTabs.addEventListener("click", function (evt) {
@@ -567,7 +598,43 @@ function insertPlaceholder(text) {
   var newPos = start + text.length;
   field.setSelectionRange(newPos, newPos);
   field.focus();
+  renderEmailPreview();
 }
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function substitutePlaceholders(text) {
+  var out = text || "";
+  allPlaceholders.forEach(function (p) {
+    if (!p.placeholder) return;
+    var re = new RegExp(escapeRegExp(p.placeholder), "g");
+    out = out.replace(re, p.exampleValue != null ? p.exampleValue : "");
+  });
+  return out;
+}
+
+function renderEmailPreview() {
+  var previewSubject = document.getElementById("previewSubject");
+  var previewBody = document.getElementById("previewBody");
+  var previewTo = document.getElementById("previewTo");
+  if (!previewSubject || !previewBody) return;
+
+  var subject = substitutePlaceholders(tplSubjectInput.value);
+  var body = substitutePlaceholders(tplBodyInput.value);
+
+  previewSubject.textContent = subject || "(no subject)";
+  previewSubject.classList.toggle("preview-empty", !subject);
+  previewBody.textContent = body || "(empty body)";
+  previewBody.classList.toggle("preview-empty", !body);
+
+  var toExample = (allPlaceholders.find(function (p) { return p.key === "email"; }) || {}).exampleValue;
+  if (previewTo && toExample) previewTo.textContent = toExample;
+}
+
+tplSubjectInput.addEventListener("input", renderEmailPreview);
+tplBodyInput.addEventListener("input", renderEmailPreview);
 
 function openEditor(tpl) {
   editorError.textContent = "";
@@ -593,6 +660,7 @@ function openEditor(tpl) {
     tplActiveInput.checked = false;
   }
   editorModal.classList.add("visible");
+  renderEmailPreview();
   (tpl ? tplNameInput : tplTypeSelect).focus();
 }
 
@@ -1021,6 +1089,23 @@ function escapeHtml(str) {
   div.appendChild(document.createTextNode(str));
   return div.innerHTML;
 }
+
+// ── Stage badge ───────────────────────────────────────────────────
+(function initStageBadge() {
+  var badge = document.getElementById("stageBadge");
+  if (!badge) return;
+  badge.textContent = STAGE.toUpperCase();
+  badge.classList.add("stage-" + STAGE);
+  badge.title = API_BASE + " (click to switch)";
+  badge.addEventListener("click", function () {
+    var next = STAGE === "prod" ? "dev" : "prod";
+    if (!confirm("Switch environment to " + next.toUpperCase() + " and reload?")) return;
+    try { localStorage.setItem(STAGE_STORAGE_KEY, next); } catch (e) {}
+    var url = new URL(window.location.href);
+    url.searchParams.delete("stage");
+    window.location.replace(url.toString());
+  });
+})();
 
 // ── Auto-login from localStorage ──────────────────────────────────
 (function tryAutoLogin() {
