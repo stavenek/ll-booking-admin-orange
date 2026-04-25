@@ -27,7 +27,9 @@ function resolveStage() {
     var stored = localStorage.getItem(STAGE_STORAGE_KEY);
     if (stored && STAGES[stored]) return stored;
   } catch (e) {}
-  return location.hostname.endsWith(".github.io") ? "prod" : "dev";
+  // Default to dev until ll-booking-backend dev→main merge & prod deploy
+  // ships body.status, numberOfAdults rename, and the partial-PUT merge fix.
+  return "dev";
 }
 
 const STAGE = resolveStage();
