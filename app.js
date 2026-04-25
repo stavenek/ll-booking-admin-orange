@@ -238,7 +238,6 @@ pwdInput.addEventListener("keydown", function (evt) {
 });
 
 function fetchBookings() {
-  errorDiv.textContent = "";
   filterContainer.classList.remove("visible");
   tableContainer.innerHTML = '<div class="empty-state">Loading...</div>';
   paginationDiv.innerHTML = "";
@@ -269,7 +268,7 @@ function fetchBookings() {
     })
     .catch(function (err) {
       tableContainer.innerHTML = "";
-      errorDiv.textContent = err.message;
+      showError(err.message);
     });
 }
 
@@ -534,13 +533,12 @@ function updateBookingField(bookingId, field, value, selectEl) {
     body: JSON.stringify(booking),
   })
     .then(function () {
-      errorDiv.textContent = "";
       showToast("Updated " + field + " for " + booking.name);
       renderTable();
       renderPagination();
     })
     .catch(function (err) {
-      errorDiv.textContent = "Save failed (" + field + " for " + booking.name + "): " + err.message;
+      showError("Save failed (" + field + " for " + booking.name + "): " + err.message);
       selectEl.disabled = false;
     })
     .finally(hideUpdateModal);
@@ -574,7 +572,6 @@ function renderPagination() {
 
 // ── Email Templates ───────────────────────────────────────────────
 function fetchEmailTemplates() {
-  emailError.textContent = "";
   templatesList.innerHTML = '<div class="empty-state">Loading templates...</div>';
 
   return fetchJson(API_BASE + "/email-templates?admin=" + encodeURIComponent(adminPwd))
@@ -585,7 +582,7 @@ function fetchEmailTemplates() {
     })
     .catch(function (err) {
       templatesList.innerHTML = "";
-      emailError.textContent = err.message;
+      showError(err.message);
     });
 }
 
@@ -708,7 +705,6 @@ tplSubjectInput.addEventListener("input", renderEmailPreview);
 tplBodyInput.addEventListener("input", renderEmailPreview);
 
 function openEditor(tpl) {
-  editorError.textContent = "";
   lastFocusedField = null;
   renderPlaceholderSidebar();
   if (tpl) {
@@ -756,8 +752,6 @@ document.addEventListener("keydown", function (evt) {
 });
 
 saveTemplateBtn.addEventListener("click", function () {
-  editorError.textContent = "";
-
   var type = tplTypeSelect.value;
   var name = tplNameInput.value.trim();
   var subject = tplSubjectInput.value.trim();
@@ -765,7 +759,7 @@ saveTemplateBtn.addEventListener("click", function () {
   var active = tplActiveInput.checked;
 
   if (!type || !name || !subject || !body) {
-    editorError.textContent = "All fields are required.";
+    showError("All fields are required.");
     return;
   }
 
@@ -784,7 +778,7 @@ saveTemplateBtn.addEventListener("click", function () {
         fetchEmailTemplates();
       })
       .catch(function (err) {
-        editorError.textContent = err.message;
+        showError(err.message);
       })
       .finally(hideUpdateModal);
   } else {
@@ -801,18 +795,21 @@ saveTemplateBtn.addEventListener("click", function () {
         fetchEmailTemplates();
       })
       .catch(function (err) {
-        editorError.textContent = err.message;
+        showError(err.message);
       })
       .finally(hideUpdateModal);
   }
 });
 
 // ── Toast notification ────────────────────────────────────────────
-function showToast(message) {
+function showToast(message, opts) {
+  opts = opts || {};
+  var isError = !!opts.error;
+  var duration = opts.duration != null ? opts.duration : (isError ? 5000 : 2500);
   var toast = document.createElement("div");
-  toast.className = "toast";
-  toast.setAttribute("role", "status");
-  toast.setAttribute("aria-live", "polite");
+  toast.className = "toast" + (isError ? " toast-error" : "");
+  toast.setAttribute("role", isError ? "alert" : "status");
+  toast.setAttribute("aria-live", isError ? "assertive" : "polite");
   toast.textContent = message;
   document.body.appendChild(toast);
 
@@ -825,7 +822,11 @@ function showToast(message) {
     setTimeout(function () {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 200);
-  }, 2500);
+  }, duration);
+}
+
+function showError(message) {
+  showToast(message, { error: true });
 }
 
 // ── Slot Configs (calendar view) ──────────────────────────────────
@@ -851,7 +852,6 @@ function formatDateStrLong(dateStr) {
 }
 
 function fetchSlotConfigs() {
-  slotsError.textContent = "";
   return fetchJson(API_BASE + "/slot-configs?admin=" + encodeURIComponent(adminPwd))
     .then(function (data) {
       slotConfigByDate = {};
@@ -867,7 +867,7 @@ function fetchSlotConfigs() {
       if (selectedDateStr) renderDayDetail();
     })
     .catch(function (err) {
-      slotsError.textContent = err.message;
+      showError(err.message);
     });
 }
 
@@ -1055,7 +1055,7 @@ function saveSelectedDay() {
     if (!cb.checked) continue;
     var cap = parseInt(rows[i].querySelector(".hs-cap").value, 10);
     if (isNaN(cap) || cap < 0 || cap > 500) {
-      slotsError.textContent = "Max people must be 0–500.";
+      showError("Max people must be 0–500.");
       return;
     }
     timeSlots.push({
@@ -1065,10 +1065,9 @@ function saveSelectedDay() {
     });
   }
   if (timeSlots.length < 1) {
-    slotsError.textContent = "Select at least one time slot.";
+    showError("Select at least one time slot.");
     return;
   }
-  slotsError.textContent = "";
 
   var existing = slotConfigByDate[selectedDateStr];
   var url, method, body;
@@ -1093,7 +1092,7 @@ function saveSelectedDay() {
       return Promise.all([fetchSlotConfigs(), fetchAvailableDates()]);
     })
     .then(function () { if (selectedDateStr) renderDayDetail(); })
-    .catch(function (err) { slotsError.textContent = err.message; })
+    .catch(function (err) { showError(err.message); })
     .finally(hideUpdateModal);
 }
 
@@ -1109,7 +1108,7 @@ function deleteSlotConfig(dateStr) {
       return fetchSlotConfigs();
     })
     .then(function () { renderDayDetail(); })
-    .catch(function (err) { slotsError.textContent = err.message; })
+    .catch(function (err) { showError(err.message); })
     .finally(hideUpdateModal);
 }
 

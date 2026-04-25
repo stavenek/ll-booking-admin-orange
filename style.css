@@ -1492,6 +1492,12 @@ body {
   transform: translateY(0);
 }
 
+.toast.toast-error {
+  background: var(--color-danger);
+  color: #ffffff;
+  border-left: 4px solid #ffffff;
+}
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .app-header {
