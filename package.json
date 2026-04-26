@@ -1,0 +1,17 @@
+{
+  "name": "ll-booking-admin-orange",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Lustiga Landet Booking Admin — static SPA. No build step; package.json exists only for lint tooling.",
+  "scripts": {
+    "lint:js": "eslint app.js",
+    "syntax:js": "node --check app.js",
+    "lint:yaml": "node -e \"require('js-yaml').load(require('fs').readFileSync('swagger.yaml','utf8')); console.log('swagger.yaml: ok')\"",
+    "check": "npm run syntax:js && npm run lint:js && npm run lint:yaml"
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
+    "js-yaml": "^4.1.0"
+  }
+}
