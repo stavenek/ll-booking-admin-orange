@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Incheckning – Lustiga Landet</title>
+  <style>
+    :root {
+      --bg: #f4f5f9;
+      --surface: #ffffff;
+      --border: #d8dce6;
+      --border-strong: #b6bccd;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4338ca;
+      --primary-hover: #3730a3;
+      --primary-light: #eef2ff;
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --success-tint: #f0fdf4;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --warn: #b45309;
+      --warn-bg: #fef3c7;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
+      --shadow-md: 0 6px 16px rgba(15, 23, 42, .08);
+      --shadow-lg: 0 16px 40px rgba(15, 23, 42, .15);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 999px;
+      --tap: 48px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.4;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
+    }
+
+    button { font-family: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    input, select { font-family: inherit; }
+
+    /* Stage tint */
+    body.stage-prod { --stage-color: #be185d; --stage-color-strong: #831843; }
+    body.stage-dev  { --stage-color: #1d4ed8; --stage-color-strong: #1e3a8a; }
+
+    /* Header */
+    .top {
+      position: sticky; top: 0;
+      background: linear-gradient(135deg, var(--stage-color-strong) 0%, var(--stage-color) 100%);
+      color: #fff;
+      padding: calc(var(--safe-top) + 14px) 24px 14px;
+      box-shadow: var(--shadow-sm);
+      z-index: 50;
+    }
+    .top-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .top-title {
+      display: flex; align-items: baseline; gap: 12px;
+      font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
+    }
+    .stage-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      background: #fff; color: var(--stage-color);
+      font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: var(--radius-md);
+      padding: 0 18px; height: var(--tap); min-width: 120px;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.26); }
+
+    /* Dev warning */
+    .dev-warning {
+      background: var(--warn-bg);
+      color: var(--warn);
+      padding: 12px 24px;
+      font-weight: 700;
+      text-align: center;
+      border-bottom: 2px solid var(--warn);
+      display: none;
+    }
+    body.stage-dev .dev-warning { display: block; }
+
+    /* Login */
+    .login-screen {
+      min-height: calc(100vh - 80px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 60px 24px;
+    }
+    .login-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: min(420px, 100%);
+      box-shadow: var(--shadow-md);
+    }
+    .login-card h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+    }
+    .login-card p {
+      margin: 0 0 20px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .login-card label {
+      display: block;
+      font-size: 14px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .login-card input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 18px;
+      min-height: var(--tap);
+      background: #fff;
+    }
+    .login-card input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .login-card .actions {
+      margin-top: 20px;
+      display: flex; gap: 12px;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 24px;
+      height: var(--tap);
+      min-width: 120px;
+      font-size: 17px; font-weight: 700;
+      cursor: pointer; flex: 1;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Main layout */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px calc(var(--safe-bot) + 24px);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .toolbar select {
+      width: 100%;
+      height: var(--tap);
+      padding: 0 14px;
+      font-size: 17px; font-weight: 600;
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path fill='%2364748b' d='M3 5l4 4 4-4z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    .toolbar select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .btn-reload {
+      width: var(--tap); height: var(--tap);
+      border: 2px solid var(--border); border-radius: var(--radius-md);
+      background: #fff; color: var(--primary);
+      font-size: 22px; font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-reload:hover { background: var(--primary-light); }
+    .btn-reload.loading {
+      pointer-events: none; color: transparent; position: relative;
+    }
+    .btn-reload.loading::after {
+      content: ''; position: absolute;
+      top: 50%; left: 50%; margin: -10px 0 0 -10px;
+      width: 20px; height: 20px;
+      border: 3px solid var(--primary); border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stats {
+      display: flex; align-items: center; gap: 16px;
+      padding: 10px 16px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .stats .big {
+      font-size: 24px; font-weight: 800;
+    }
+    .stats .stats-spacer { flex: 1; }
+    .stats label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 14px; color: var(--text-muted); font-weight: 600;
+      cursor: pointer;
+    }
+    .stats label input { width: 18px; height: 18px; }
+
+    .search {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border); border-radius: var(--radius-md);
+      font-size: 18px;
+      min-height: var(--tap);
+      background: #fff;
+      margin-bottom: 12px;
+    }
+    .search:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Bookings list */
+    .bookings-list { display: flex; flex-direction: column; gap: 10px; }
+    .booking-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .booking-card.is-checkedin {
+      background: var(--success-tint);
+      border-color: var(--success-bg);
+    }
+    .booking-card.is-removed {
+      opacity: 0.55;
+      background: #f8fafc;
+    }
+    .booking-card.is-removed .b-name,
+    .booking-card.is-removed .b-id {
+      text-decoration: line-through;
+    }
+    .booking-card.in-flight {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .booking-card.dev-outline { outline: 2px dashed #f59e0b; outline-offset: -2px; }
+
+    .b-info {
+      min-width: 0;
+    }
+    .b-name {
+      font-size: 22px; font-weight: 700;
+      margin: 0 0 4px;
+      letter-spacing: -0.01em;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .b-meta {
+      font-size: 14px; color: var(--text-muted);
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    }
+    .b-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      background: var(--bg); padding: 2px 8px; border-radius: 6px;
+      color: var(--text);
+    }
+
+    .b-action {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pill {
+      display: inline-flex; align-items: center;
+      padding: 6px 12px; border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .pill-new { background: var(--primary-light); color: var(--primary); }
+    .pill-checkedin { background: var(--success-bg); color: var(--success); }
+    .pill-removed { background: var(--danger-bg); color: var(--danger); }
+
+    .btn-checkin {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 24px;
+      height: 56px;
+      min-width: 160px;
+      font-size: 18px; font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .btn-checkin:hover { background: #166534; }
+    .btn-checkin:active { transform: scale(0.97); }
+    .btn-checkin:disabled { opacity: 0.7; cursor: wait; }
+    .btn-checkin.loading { color: transparent; }
+    .btn-checkin.loading::after {
+      content: '';
+      position: absolute; top: 50%; left: 50%; margin: -10px 0 0 -10px;
+      width: 20px; height: 20px;
+      border: 3px solid #fff; border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    /* Toasts */
+    .toasts {
+      position: fixed; top: calc(var(--safe-top) + 24px); right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 1000;
+      pointer-events: none;
+      max-width: min(420px, calc(100vw - 48px));
+    }
+    .toast {
+      background: var(--text); color: #fff;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px; font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; transform: translateY(-10px);
+      transition: opacity 200ms ease, transform 200ms ease;
+      pointer-events: auto;
+      max-width: 100%;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .toast.toast-error { background: var(--danger); border-left: 4px solid #fff; }
+    .toast.toast-success { background: var(--success); }
+    .toast.toast-sticky { padding-right: 44px; position: relative; }
+    .toast.toast-sticky::after {
+      content: '×'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 22px; font-weight: 700; opacity: 0.8;
+    }
+
+    /* Responsive: portrait iPad and smaller */
+    @media (max-width: 820px) {
+      .top-row { flex-wrap: wrap; }
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      .toolbar .btn-reload { grid-column: 2; grid-row: 2; justify-self: end; }
+      .toolbar .stats-toggle { grid-column: 1; grid-row: 2; }
+    }
+
+    @media (max-width: 540px) {
+      .booking-card {
+        grid-template-columns: 1fr;
+      }
+      .b-action { justify-content: space-between; }
+      .btn-checkin { min-width: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div class="top-title">
+        <span>Incheckning Lustiga Landet</span>
+        <span class="stage-badge" id="stageBadge">DEV</span>
+      </div>
+      <button class="btn-logout" id="logoutBtn" type="button" hidden>Logga ut</button>
+    </div>
+  </header>
+
+  <div class="dev-warning" role="alert">
+    DEV-MILJÖ — incheckningar gäller inte i kassan
+  </div>
+
+  <main class="main" id="main">
+    <!-- Login or main content rendered here -->
+  </main>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script>
+    // ── Stage resolution (separate from admin app) ─────────────────
+    const STAGES = {
+      dev: "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1",
+      prod: "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1",
+    };
+    const PWD_KEY = "llCheckinPwd";
+    const STAGE_KEY = "llCheckinStage";
+
+    function resolveStage() {
+      try {
+        var fromUrl = new URLSearchParams(window.location.search).get("stage");
+        if (fromUrl && STAGES[fromUrl]) {
+          sessionStorage.setItem(STAGE_KEY, fromUrl);
+          return fromUrl;
+        }
+      } catch (e) {}
+      try {
+        var stored = sessionStorage.getItem(STAGE_KEY);
+        if (stored && STAGES[stored]) return stored;
+      } catch (e) {}
+      return location.hostname.endsWith(".github.io") ? "prod" : "dev";
+    }
+    const STAGE = resolveStage();
+    const API_BASE = STAGES[STAGE];
+    document.body.classList.add("stage-" + STAGE);
+    document.getElementById("stageBadge").textContent = STAGE.toUpperCase();
+
+    // ── Fetch wrapper that scrubs admin= and surfaces errorMsg ─────
+    function scrubUrl(url) {
+      return String(url).replace(/admin=[^&]*/g, "admin=***");
+    }
+    function scrubMessage(msg) {
+      return String(msg == null ? "" : msg).replace(/admin=[^&\s]*/g, "admin=***");
+    }
+    (function logFetches() {
+      var orig = window.fetch;
+      window.fetch = function (input, init) {
+        var url = typeof input === "string" ? input : (input && input.url) || String(input);
+        var method = (init && init.method) || (typeof input !== "string" && input && input.method) || "GET";
+        console.log("[fetch]", method, scrubUrl(url));
+        return orig.apply(this, arguments);
+      };
+    })();
+
+    function fetchJson(url, init) {
+      return fetch(url, init).then(function (res) {
+        return res.text().then(function (text) {
+          var body = null;
+          if (text) { try { body = JSON.parse(text); } catch (e) {} }
+          if (!res.ok) {
+            var msg = (body && (body.errorMsg || body.message)) ||
+              (text && text.length < 200 ? text : "") ||
+              ("HTTP " + res.status);
+            var err = new Error(scrubMessage(msg));
+            err.status = res.status;
+            err.body = body;
+            console.error("[fetch error]", res.status, scrubUrl(url), body || text);
+            throw err;
+          }
+          if (body && body.success === false) {
+            var err2 = new Error(scrubMessage(body.errorMsg || body.errorCode || "Request failed"));
+            err2.body = body;
+            console.error("[api success:false]", scrubUrl(url), body);
+            throw err2;
+          }
+          return body;
+        });
+      });
+    }
+
+    // ── HTML escaping ──────────────────────────────────────────────
+    function escapeHtml(str) {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode(str == null ? "" : str));
+      return div.innerHTML;
+    }
+    function escapeAttr(str) {
+      return String(str == null ? "" : str)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    // ── Toasts ─────────────────────────────────────────────────────
+    var toastsEl = document.getElementById("toasts");
+    function showToast(message, opts) {
+      opts = opts || {};
+      var isError = !!opts.error;
+      var isSticky = !!opts.sticky;
+      var duration = opts.duration != null ? opts.duration : (isSticky ? 0 : (isError ? 5000 : 2500));
+      var toast = document.createElement("div");
+      toast.className = "toast" +
+        (isError ? " toast-error" : (opts.success ? " toast-success" : "")) +
+        (isSticky ? " toast-sticky" : "");
+      toast.textContent = scrubMessage(message);
+      if (isSticky) toast.addEventListener("click", function () { dismiss(); });
+      toastsEl.appendChild(toast);
+      requestAnimationFrame(function () { toast.classList.add("visible"); });
+      function dismiss() {
+        toast.classList.remove("visible");
+        setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 200);
+      }
+      if (duration > 0) setTimeout(dismiss, duration);
+      return dismiss;
+    }
+    function showError(msg, opts) { return showToast(msg, Object.assign({ error: true }, opts || {})); }
+    function showSuccess(msg) { return showToast(msg, { success: true, duration: 1800 }); }
+
+    // ── Time helpers (Europe/Stockholm) ────────────────────────────
+    function nowInStockholm() {
+      var fmt = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "Europe/Stockholm",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: false,
+      });
+      var parts = {};
+      fmt.formatToParts(new Date()).forEach(function (p) { parts[p.type] = p.value; });
+      var dateStr = parts.year + parts.month + parts.day; // YYYYMMDD
+      var hh = parts.hour, mm = parts.minute;
+      return { dateStr: dateStr, hh: hh, mm: mm, hhmm: hh + ":" + mm };
+    }
+
+    // ── State ──────────────────────────────────────────────────────
+    var adminPwd = "";
+    var allSlots = [];                // /slots response (admin-enriched)
+    var currentBookings = [];         // bookings for selected slot
+    var inFlight = new Set();         // bookingIds with pending /checkin
+    var pollHandle = null;
+    var selectedDate = "";            // YYYYMMDD
+    var selectedTime = "";            // HH:mm
+    var showRemoved = false;
+    var searchTerm = "";
+
+    // ── Login screen render ────────────────────────────────────────
+    var mainEl = document.getElementById("main");
+    var logoutBtn = document.getElementById("logoutBtn");
+
+    function renderLogin(opts) {
+      mainEl.innerHTML =
+        '<div class="login-screen">' +
+          '<div class="login-card">' +
+            '<h2>Logga in</h2>' +
+            '<p>Ange admin-lösenord för att börja checka in gäster.</p>' +
+            '<label for="pwdInput">Lösenord</label>' +
+            '<input id="pwdInput" type="password" autocomplete="current-password" inputmode="text" autofocus />' +
+            '<div class="actions">' +
+              '<button class="btn-primary" id="loginBtn" type="button">Logga in</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      logoutBtn.hidden = true;
+      var pwdInput = document.getElementById("pwdInput");
+      var loginBtn = document.getElementById("loginBtn");
+      pwdInput.focus();
+      loginBtn.addEventListener("click", attemptLogin);
+      pwdInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") attemptLogin();
+      });
+      if (opts && opts.message) showError(opts.message);
+    }
+
+    function attemptLogin() {
+      var pwdInput = document.getElementById("pwdInput");
+      var loginBtn = document.getElementById("loginBtn");
+      var pwd = pwdInput.value.trim();
+      if (!pwd) return;
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Loggar in…";
+      validateAndStart(pwd).catch(function (err) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Logga in";
+        if (err.status === 400 || err.status === 401 || err.status === 403) {
+          try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+          showError("Fel lösenord");
+        } else {
+          showError("Inloggning misslyckades: " + err.message);
+        }
+      });
+    }
+
+    function validateAndStart(pwd) {
+      // Use admin-only endpoint to truly verify the password.
+      // /slot-configs is admin-only per swagger v3.0.0; anon callers get HTTP 400.
+      return fetchJson(API_BASE + "/slot-configs?admin=" + encodeURIComponent(pwd))
+        .then(function () {
+          adminPwd = pwd;
+          try { sessionStorage.setItem(PWD_KEY, pwd); } catch (e) {}
+          return loadInitialAndRender();
+        });
+    }
+
+    // ── Slot list, default selection ───────────────────────────────
+    function loadInitialAndRender() {
+      return fetchJson(API_BASE + "/slots?admin=" + encodeURIComponent(adminPwd))
+        .then(function (data) {
+          allSlots = Array.isArray(data) ? data : [];
+          chooseDefaultSlot();
+          renderMain();
+          startPoll();
+          return refreshBookings();
+        });
+    }
+
+    function chooseDefaultSlot() {
+      var now = nowInStockholm();
+      // All open slots grouped by date
+      var byDate = {};
+      allSlots.forEach(function (s) {
+        if (s.isOpen !== true) return;
+        if (!byDate[s.dateStr]) byDate[s.dateStr] = [];
+        byDate[s.dateStr].push(s);
+      });
+
+      var todayOpen = byDate[now.dateStr] || [];
+      if (todayOpen.length) {
+        // first slot whose endTime >= now, else last slot of today
+        var pick = todayOpen.find(function (s) { return s.endTime >= now.hhmm; });
+        if (!pick) pick = todayOpen[todayOpen.length - 1];
+        selectedDate = pick.dateStr;
+        selectedTime = pick.startTime;
+        return;
+      }
+
+      // No open slot today — pick first future date with open slot
+      var futureDates = Object.keys(byDate)
+        .filter(function (d) { return d >= now.dateStr; })
+        .sort();
+      if (futureDates.length) {
+        var firstFutureDate = futureDates[0];
+        selectedDate = firstFutureDate;
+        selectedTime = byDate[firstFutureDate][0].startTime;
+        return;
+      }
+
+      // No future open slots at all — default to today, first slot regardless of openness
+      selectedDate = now.dateStr;
+      var anyToday = allSlots.filter(function (s) { return s.dateStr === now.dateStr; });
+      selectedTime = anyToday.length ? anyToday[0].startTime : "";
+    }
+
+    function distinctDates() {
+      var seen = {};
+      allSlots.forEach(function (s) { seen[s.dateStr] = true; });
+      var today = nowInStockholm().dateStr;
+      seen[today] = true; // always show today
+      return Object.keys(seen).sort();
+    }
+
+    function timesForDate(dateStr) {
+      return allSlots
+        .filter(function (s) { return s.dateStr === dateStr; })
+        .map(function (s) { return s.startTime; })
+        .sort();
+    }
+
+    function formatDateLabel(dateStr) {
+      if (!dateStr || dateStr.length !== 8) return dateStr;
+      var y = +dateStr.slice(0, 4), m = +dateStr.slice(4, 6), d = +dateStr.slice(6, 8);
+      var dt = new Date(Date.UTC(y, m - 1, d));
+      var fmt = new Intl.DateTimeFormat("sv-SE", {
+        weekday: "short", day: "numeric", month: "short",
+        timeZone: "UTC",
+      });
+      return dateStr + " · " + fmt.format(dt);
+    }
+
+    // ── Main UI ────────────────────────────────────────────────────
+    function renderMain() {
+      var dates = distinctDates();
+      var times = timesForDate(selectedDate);
+
+      var dateOptions = dates.map(function (d) {
+        return '<option value="' + d + '"' + (d === selectedDate ? " selected" : "") + ">" + escapeHtml(formatDateLabel(d)) + "</option>";
+      }).join("");
+
+      var timeOptions = times.length
+        ? times.map(function (t) {
+            return '<option value="' + t + '"' + (t === selectedTime ? " selected" : "") + ">" + escapeHtml(t) + "</option>";
+          }).join("")
+        : '<option value="" disabled selected>Inga öppna pass</option>';
+
+      mainEl.innerHTML =
+        '<div class="toolbar">' +
+          '<select id="dateSel" aria-label="Välj datum">' + dateOptions + '</select>' +
+          '<select id="timeSel" aria-label="Välj tid"' + (times.length ? "" : " disabled") + '>' + timeOptions + '</select>' +
+          '<label class="stats-toggle"><input type="checkbox" id="showRemoved"' + (showRemoved ? " checked" : "") + ' /> Visa borttagna</label>' +
+          '<button class="btn-reload" id="reloadBtn" type="button" aria-label="Ladda om" title="Ladda om">↻</button>' +
+        '</div>' +
+        '<div class="stats" id="stats"></div>' +
+        '<input type="search" class="search" id="searchInput" placeholder="Sök på namn eller boknings-ID" inputmode="search" enterkeyhint="search" autofocus value="' + escapeAttr(searchTerm) + '" />' +
+        '<div class="bookings-list" id="bookingsList"><div class="empty">Laddar bokningar…</div></div>';
+
+      logoutBtn.hidden = false;
+      logoutBtn.onclick = logout;
+      document.getElementById("dateSel").addEventListener("change", function () {
+        selectedDate = this.value;
+        var firstTime = timesForDate(selectedDate)[0] || "";
+        selectedTime = firstTime;
+        searchTerm = "";
+        renderMain();
+        cancelPoll();
+        startPoll();
+        refreshBookings();
+      });
+      document.getElementById("timeSel").addEventListener("change", function () {
+        selectedTime = this.value;
+        searchTerm = "";
+        cancelPoll();
+        startPoll();
+        refreshBookings();
+        renderBookingList();
+      });
+      document.getElementById("showRemoved").addEventListener("change", function () {
+        showRemoved = this.checked;
+        renderBookingList();
+      });
+      document.getElementById("reloadBtn").addEventListener("click", function () {
+        var btn = this;
+        btn.classList.add("loading");
+        refreshBookings().finally(function () { btn.classList.remove("loading"); });
+      });
+      var search = document.getElementById("searchInput");
+      search.addEventListener("input", function () {
+        searchTerm = this.value;
+        renderBookingList();
+      });
+      search.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") { this.value = ""; searchTerm = ""; renderBookingList(); }
+      });
+
+      renderStats();
+      renderBookingList();
+    }
+
+    function renderStats() {
+      var statsEl = document.getElementById("stats");
+      if (!statsEl) return;
+      var newCount = currentBookings.filter(function (b) { return effectiveStatus(b) === "NEW"; }).length;
+      var checkedinCount = currentBookings.filter(function (b) { return effectiveStatus(b) === "CHECKED_IN"; }).length;
+      var total = newCount + checkedinCount;
+      statsEl.innerHTML =
+        '<span>Incheckade:</span>' +
+        '<span class="big">' + checkedinCount + ' / ' + total + '</span>' +
+        '<span class="stats-spacer"></span>';
+    }
+
+    function effectiveStatus(b) {
+      // In-flight check-in keeps optimistic CHECKED_IN regardless of stale server data
+      if (inFlight.has(b.bookingId) && b.__optimistic === "CHECKED_IN") return "CHECKED_IN";
+      return b.status || "NEW";
+    }
+
+    function renderBookingList() {
+      var listEl = document.getElementById("bookingsList");
+      if (!listEl) return;
+
+      var term = (searchTerm || "").toLowerCase().trim();
+      var rows = currentBookings
+        .filter(function (b) {
+          var status = effectiveStatus(b);
+          if (status === "REMOVED" && !showRemoved) return false;
+          if (!term) return true;
+          var name = (b.name || "").toLowerCase();
+          var id = (b.bookingId || "").toLowerCase();
+          return name.indexOf(term) !== -1 || id.indexOf(term) !== -1;
+        })
+        .sort(function (a, b) {
+          var rank = { NEW: 0, CHECKED_IN: 1, REMOVED: 2 };
+          var sa = effectiveStatus(a), sb = effectiveStatus(b);
+          if (rank[sa] !== rank[sb]) return rank[sa] - rank[sb];
+          return (a.name || "").localeCompare(b.name || "", "sv");
+        });
+
+      if (rows.length === 0) {
+        listEl.innerHTML = '<div class="empty">' + (term ? "Inga träffar." : "Inga bokningar i detta pass.") + '</div>';
+        renderStats();
+        return;
+      }
+
+      listEl.innerHTML = rows.map(function (b) {
+        var status = effectiveStatus(b);
+        var classes = ["booking-card"];
+        if (status === "CHECKED_IN") classes.push("is-checkedin");
+        if (status === "REMOVED") classes.push("is-removed");
+        if (inFlight.has(b.bookingId)) classes.push("in-flight");
+        if (STAGE === "dev" && status === "NEW") classes.push("dev-outline");
+
+        var pillCls = status === "CHECKED_IN" ? "pill-checkedin" : status === "REMOVED" ? "pill-removed" : "pill-new";
+        var pillText = status === "CHECKED_IN" ? "✓ Incheckad" : status === "REMOVED" ? "Borttagen" : "Bokad";
+
+        var meta = [
+          (b.numberOfAdults || 0) + " v",
+          (b.numberOfKids || 0) + " b",
+          (b.numberOfPensioners || 0) + " p",
+          (b.numberOfCars || 0) + " bil",
+        ].join(" · ");
+
+        var actionHtml = "";
+        if (status === "NEW") {
+          var loadingCls = inFlight.has(b.bookingId) ? " loading" : "";
+          actionHtml =
+            '<button class="btn-checkin' + loadingCls + '" type="button" data-id="' + escapeAttr(b.bookingId) + '"' +
+            (inFlight.has(b.bookingId) ? " disabled" : "") + '>Checka in</button>';
+        }
+
+        return (
+          '<div class="' + classes.join(" ") + '">' +
+            '<div class="b-info">' +
+              '<div class="b-name">' + escapeHtml(b.name || "(utan namn)") + '</div>' +
+              '<div class="b-meta">' +
+                '<span>' + escapeHtml(meta) + '</span>' +
+                '<span class="b-id">' + escapeHtml(b.bookingId) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="b-action">' +
+              '<span class="pill ' + pillCls + '">' + pillText + '</span>' +
+              actionHtml +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
+
+      // Wire check-in buttons
+      listEl.querySelectorAll(".btn-checkin").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var id = this.getAttribute("data-id");
+          var booking = currentBookings.find(function (b) { return b.bookingId === id; });
+          if (booking) checkIn(booking);
+        });
+      });
+
+      renderStats();
+    }
+
+    // ── Bookings fetch + poll ──────────────────────────────────────
+    function buildBookingsUrl() {
+      var params = new URLSearchParams();
+      params.set("d", selectedDate);
+      params.set("t", selectedTime);
+      params.set("admin", adminPwd);
+      return API_BASE + "/bookings?" + params.toString();
+    }
+
+    function refreshBookings() {
+      if (!selectedDate || !selectedTime) {
+        currentBookings = [];
+        renderBookingList();
+        return Promise.resolve();
+      }
+      return fetchJson(buildBookingsUrl())
+        .then(function (data) {
+          var fresh = Array.isArray(data) ? data : [];
+          // Merge: any in-flight bookingId keeps its local optimistic status
+          var byId = {};
+          fresh.forEach(function (b) { byId[b.bookingId] = b; });
+          currentBookings = fresh.map(function (b) {
+            if (inFlight.has(b.bookingId)) {
+              return Object.assign({}, b, { __optimistic: "CHECKED_IN" });
+            }
+            return b;
+          });
+          // Also keep optimistic-only entries that may not yet be in the response
+          inFlight.forEach(function (id) {
+            if (!byId[id]) {
+              var existing = currentBookings.find(function (x) { return x.bookingId === id; });
+              if (!existing) {
+                // Best-effort: keep the previous booking with optimistic status
+              }
+            }
+          });
+          renderBookingList();
+        })
+        .catch(function (err) {
+          showError("Kunde inte hämta bokningar: " + err.message);
+        });
+    }
+
+    function startPoll() {
+      cancelPoll();
+      pollHandle = setInterval(function () {
+        if (document.hidden) return;
+        refreshBookings();
+      }, 60000);
+    }
+    function cancelPoll() {
+      if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
+    }
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) return;
+      if (adminPwd) {
+        refreshBookings();
+        startPoll();
+      }
+    });
+
+    // ── Check-in (optimistic + idempotent reconciliation) ──────────
+    function checkIn(booking) {
+      if (inFlight.has(booking.bookingId)) return;
+      inFlight.add(booking.bookingId);
+      booking.__optimistic = "CHECKED_IN";
+      var prevStatus = booking.status;
+      booking.status = "CHECKED_IN";
+      renderBookingList();
+
+      var url = API_BASE + "/bookings/" + encodeURIComponent(booking.bookingId) +
+        "/checkin?admin=" + encodeURIComponent(adminPwd);
+
+      fetchJson(url)
+        .then(function () {
+          inFlight.delete(booking.bookingId);
+          delete booking.__optimistic;
+          showSuccess("Incheckad: " + booking.name);
+          renderBookingList();
+        })
+        .catch(function (err) {
+          // Refetch to learn ground truth — /checkin is idempotent
+          refreshBookings()
+            .then(function () {
+              var refreshed = currentBookings.find(function (b) { return b.bookingId === booking.bookingId; });
+              inFlight.delete(booking.bookingId);
+              if (refreshed && refreshed.status === "CHECKED_IN") {
+                showSuccess("Status verifierad: " + refreshed.name);
+              } else {
+                if (refreshed) refreshed.status = prevStatus;
+                showError("Incheckning misslyckades: " + err.message);
+              }
+              renderBookingList();
+            })
+            .catch(function () {
+              // Both /checkin and refetch failed — fail loud and safe
+              inFlight.delete(booking.bookingId);
+              booking.status = prevStatus;
+              delete booking.__optimistic;
+              renderBookingList();
+              showError("Kunde inte verifiera incheckning. Tryck Ladda om och försök igen.", { sticky: true });
+            });
+        });
+    }
+
+    // ── Logout ─────────────────────────────────────────────────────
+    function logout() {
+      cancelPoll();
+      inFlight.clear();
+      currentBookings = [];
+      allSlots = [];
+      adminPwd = "";
+      try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+      renderLogin();
+    }
+
+    // ── Boot ───────────────────────────────────────────────────────
+    (function boot() {
+      var saved = "";
+      try { saved = sessionStorage.getItem(PWD_KEY) || ""; } catch (e) {}
+      if (!saved) {
+        renderLogin();
+        return;
+      }
+      adminPwd = saved;
+      mainEl.innerHTML = '<div class="empty">Loggar in…</div>';
+      logoutBtn.hidden = false;
+      logoutBtn.onclick = logout;
+      validateAndStart(saved).catch(function (err) {
+        adminPwd = "";
+        try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+        renderLogin({ message: err.status === 400 || err.status === 401 || err.status === 403
+          ? "Sparat lösenord ogiltigt — logga in igen."
+          : "Auto-login misslyckades: " + err.message });
+      });
+    })();
+  </script>
+</body>
+</html>
