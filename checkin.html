@@ -263,16 +263,17 @@
     }
 
     /* Bookings list */
-    .bookings-list { display: flex; flex-direction: column; gap: 12px; }
+    .bookings-list { display: flex; flex-direction: column; gap: 8px; }
     .booking-card {
       background: #ffffff;
       border: 2px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 18px 20px;
+      padding: 8px 12px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 12px;
       box-shadow: var(--shadow-sm);
+      min-height: 60px;
     }
     .booking-card.is-checkedin {
       background: #dcfce7;
@@ -293,49 +294,47 @@
     }
     .booking-card.dev-outline { outline: 2px dashed #f59e0b; outline-offset: -2px; }
 
-    .b-row-top {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; min-width: 0;
+    .b-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 20px; font-weight: 800;
+      background: #0f172a; color: #fff;
+      padding: 6px 12px; border-radius: 8px;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
     }
     .b-name {
-      font-size: 26px; font-weight: 800;
-      margin: 0;
+      font-size: 22px; font-weight: 800;
       letter-spacing: -0.01em;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       min-width: 0; flex: 1;
     }
-    .b-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 16px; font-weight: 700;
-      background: var(--bg); padding: 4px 12px; border-radius: 8px;
-      color: var(--text);
-      flex-shrink: 0;
-    }
 
     .b-chips {
-      display: flex; gap: 8px; flex-wrap: wrap;
+      display: flex; gap: 6px;
+      flex-shrink: 0;
     }
     .chip {
-      display: inline-flex; align-items: baseline; gap: 6px;
-      padding: 8px 14px;
+      display: inline-flex; align-items: baseline; gap: 5px;
+      padding: 4px 10px;
       border-radius: var(--radius-pill);
-      font-size: 16px; font-weight: 600;
+      font-size: 14px; font-weight: 600;
       border: 2px solid transparent;
+      white-space: nowrap;
     }
-    .chip strong { font-size: 18px; font-weight: 800; }
-    .chip-adults { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .chip strong { font-size: 17px; font-weight: 800; }
     .chip-kids   { background: #fed7aa; color: #c2410c; border-color: #fdba74; }
+    .chip-adults { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
     .chip-pens   { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
     .chip-cars   { background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
 
-    .b-row-bottom {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; flex-wrap: wrap;
+    .b-action {
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
     }
     .pill {
       display: inline-flex; align-items: center;
-      padding: 8px 16px; border-radius: var(--radius-pill);
-      font-size: 14px; font-weight: 800; letter-spacing: 0.04em;
+      padding: 6px 12px; border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 800; letter-spacing: 0.04em;
       text-transform: uppercase;
     }
     .pill-new       { background: var(--primary-light); color: var(--primary); }
@@ -347,10 +346,10 @@
       color: #fff;
       border: none;
       border-radius: var(--radius-md);
-      padding: 0 32px;
-      height: 64px;
-      min-width: 180px;
-      font-size: 20px; font-weight: 800;
+      padding: 0 22px;
+      height: 48px;
+      min-width: 140px;
+      font-size: 17px; font-weight: 800;
       letter-spacing: 0.01em;
       cursor: pointer;
       box-shadow: var(--shadow-sm);
@@ -362,8 +361,8 @@
     .btn-checkin.loading { color: transparent; }
     .btn-checkin.loading::after {
       content: '';
-      position: absolute; top: 50%; left: 50%; margin: -12px 0 0 -12px;
-      width: 24px; height: 24px;
+      position: absolute; top: 50%; left: 50%; margin: -10px 0 0 -10px;
+      width: 20px; height: 20px;
       border: 3px solid #fff; border-top-color: transparent;
       border-radius: 50%;
       animation: spin 0.6s linear infinite;
@@ -415,9 +414,14 @@
       .toolbar .stats-toggle { grid-column: 1; grid-row: 2; }
     }
 
+    @media (max-width: 720px) {
+      .booking-card { flex-wrap: wrap; }
+      .b-chips { order: 3; flex-basis: 100%; }
+      .b-action { margin-left: auto; }
+    }
     @media (max-width: 540px) {
-      .b-name { font-size: 22px; }
-      .btn-checkin { min-width: 140px; height: 56px; font-size: 18px; padding: 0 20px; }
+      .b-name { font-size: 20px; }
+      .b-id { font-size: 18px; }
     }
   </style>
 </head>
@@ -852,30 +856,27 @@
         var cars = b.numberOfCars || 0;
 
         var chipsHtml =
-          '<span class="chip chip-adults"><strong>' + adults + '</strong> vuxna</span>' +
           '<span class="chip chip-kids"><strong>' + kids + '</strong> barn</span>' +
+          '<span class="chip chip-adults"><strong>' + adults + '</strong> vuxna</span>' +
           '<span class="chip chip-pens"><strong>' + pens + '</strong> pens</span>' +
           (cars > 0 ? '<span class="chip chip-cars"><strong>' + cars + '</strong> ' + (cars === 1 ? 'bil' : 'bilar') + '</span>' : '');
 
-        var actionHtml = "";
+        var actionHtml;
         if (status === "NEW") {
           var loadingCls = inFlight.has(b.bookingId) ? " loading" : "";
           actionHtml =
             '<button class="btn-checkin' + loadingCls + '" type="button" data-id="' + escapeAttr(b.bookingId) + '"' +
             (inFlight.has(b.bookingId) ? " disabled" : "") + '>Checka in</button>';
+        } else {
+          actionHtml = '<span class="pill ' + pillCls + '">' + pillText + '</span>';
         }
 
         return (
           '<div class="' + classes.join(" ") + '">' +
-            '<div class="b-row-top">' +
-              '<div class="b-name">' + escapeHtml(b.name || "(utan namn)") + '</div>' +
-              '<span class="b-id">' + escapeHtml(b.bookingId) + '</span>' +
-            '</div>' +
+            '<span class="b-id">' + escapeHtml(b.bookingId) + '</span>' +
+            '<div class="b-name">' + escapeHtml(b.name || "(utan namn)") + '</div>' +
             '<div class="b-chips">' + chipsHtml + '</div>' +
-            '<div class="b-row-bottom">' +
-              '<span class="pill ' + pillCls + '">' + pillText + '</span>' +
-              actionHtml +
-            '</div>' +
+            '<div class="b-action">' + actionHtml + '</div>' +
           '</div>'
         );
       }).join("");
