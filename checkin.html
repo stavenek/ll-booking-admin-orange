@@ -77,11 +77,18 @@
     }
     .stage-badge {
       display: inline-block;
-      padding: 3px 10px;
+      padding: 6px 14px;
       border-radius: var(--radius-pill);
       background: #fff; color: var(--stage-color);
-      font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
+      font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 120ms ease, background 120ms ease;
     }
+    .stage-badge:hover { background: #f1f5f9; }
+    .stage-badge:active { transform: scale(0.96); }
+    .stage-badge:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
     .btn-logout {
       background: rgba(255,255,255,0.18);
       color: #fff;
@@ -406,7 +413,7 @@
     <div class="top-row">
       <div class="top-title">
         <span>Incheckning Lustiga Landet</span>
-        <span class="stage-badge" id="stageBadge">DEV</span>
+        <button class="stage-badge" id="stageBadge" type="button" aria-label="Toggle environment">DEV</button>
       </div>
       <button class="btn-logout" id="logoutBtn" type="button" hidden>Logga ut</button>
     </div>
@@ -448,7 +455,19 @@
     const STAGE = resolveStage();
     const API_BASE = STAGES[STAGE];
     document.body.classList.add("stage-" + STAGE);
-    document.getElementById("stageBadge").textContent = STAGE.toUpperCase();
+    (function initStageBadge() {
+      var badge = document.getElementById("stageBadge");
+      badge.textContent = STAGE.toUpperCase();
+      badge.title = "Klicka för att byta miljö (just nu " + STAGE.toUpperCase() + ")";
+      badge.addEventListener("click", function () {
+        var next = STAGE === "prod" ? "dev" : "prod";
+        if (!confirm("Byt miljö till " + next.toUpperCase() + " och ladda om sidan?")) return;
+        try { sessionStorage.setItem(STAGE_KEY, next); } catch (e) {}
+        var url = new URL(window.location.href);
+        url.searchParams.delete("stage");
+        window.location.replace(url.toString());
+      });
+    })();
 
     // ── Fetch wrapper that scrubs admin= and surfaces errorMsg ─────
     function scrubUrl(url) {
