@@ -457,6 +457,63 @@ body {
   box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
+/* ── Status filter chips ──────────────────────────────────────── */
+.status-filters {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.status-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-badge);
+  background: var(--color-surface);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.status-filter-chip:hover {
+  border-color: var(--color-border-strong);
+}
+
+.status-filter-chip input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: currentColor;
+}
+
+.status-filter-chip:has(input:checked) {
+  color: #ffffff;
+  font-weight: var(--font-weight-bold);
+}
+
+.status-filter-new:has(input:checked) {
+  background: var(--badge-new-bg);
+  border-color: var(--badge-new-bg);
+}
+
+.status-filter-checked:has(input:checked) {
+  background: var(--badge-checkedin-bg);
+  border-color: var(--badge-checkedin-bg);
+}
+
+.status-filter-removed:has(input:checked) {
+  background: var(--badge-removed-bg);
+  border-color: var(--badge-removed-bg);
+}
+
 /* ── Table container ───────────────────────────────────────────── */
 .table-scroll {
   overflow-x: auto;
@@ -1540,6 +1597,153 @@ body {
   background: var(--color-danger);
   color: #ffffff;
   border-left: 4px solid #ffffff;
+}
+
+/* ── Daily overview ──────────────────────────────────────────── */
+.daily-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.daily-legend {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.daily-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.daily-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.daily-dot-new { background: var(--badge-new-bg); }
+.daily-dot-checked { background: var(--badge-checkedin-bg); }
+
+.daily-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.daily-row {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.daily-row.daily-today {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.daily-row.daily-empty {
+  opacity: 0.55;
+}
+
+.daily-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.daily-weekday {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-secondary);
+}
+
+.daily-row.daily-today .daily-weekday {
+  color: var(--color-primary);
+}
+
+.daily-datestr {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text);
+}
+
+.daily-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.daily-bar {
+  display: flex;
+  height: 24px;
+  border-radius: var(--radius-input);
+  overflow: hidden;
+  background: var(--color-border);
+  min-width: 4px;
+}
+
+.daily-bar-segment {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.daily-bar-new { background: var(--badge-new-bg); }
+.daily-bar-checked { background: var(--badge-checkedin-bg); }
+
+.daily-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.daily-totals {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  white-space: nowrap;
+}
+
+.daily-total-bookings {
+  font-size: 28px;
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.daily-total-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.daily-total-people {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 /* ── Responsive ────────────────────────────────────────────────── */

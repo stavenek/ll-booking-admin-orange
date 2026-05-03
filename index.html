@@ -25,6 +25,7 @@
       </div>
       <nav class="nav-tabs" id="navTabs">
         <button class="nav-tab active" data-tab="bookings" type="button">Bookings</button>
+        <button class="nav-tab" data-tab="daily" type="button">Daily Overview</button>
         <button class="nav-tab" data-tab="slots" type="button">Slots &amp; Opening Hours</button>
         <button class="nav-tab" data-tab="templates" type="button">Email Templates</button>
       </nav>
@@ -39,6 +40,20 @@
       <div class="error-message" id="error" role="alert"></div>
       <div class="bookings-toolbar" id="filterContainer">
         <input type="text" class="filter-input" id="filterInput" placeholder="Filter bookings by name, email, date, status..." aria-label="Filter bookings" />
+        <div class="status-filters" role="group" aria-label="Filter by status">
+          <label class="status-filter-chip status-filter-new">
+            <input type="checkbox" class="status-filter-cb" data-status="NEW" checked />
+            <span>Aktiva</span>
+          </label>
+          <label class="status-filter-chip status-filter-checked">
+            <input type="checkbox" class="status-filter-cb" data-status="CHECKED_IN" />
+            <span>Incheckade</span>
+          </label>
+          <label class="status-filter-chip status-filter-removed">
+            <input type="checkbox" class="status-filter-cb" data-status="REMOVED" />
+            <span>Raderade</span>
+          </label>
+        </div>
         <button class="btn-reload" id="reloadBookingsBtn" type="button" aria-label="Reload bookings" title="Reload bookings">↻</button>
         <div class="stats-counter" id="statsCounter" aria-live="polite">
           <div class="stat-box" id="statTotal">
@@ -53,6 +68,19 @@
       </div>
       <div id="tableContainer"></div>
       <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Daily Overview panel -->
+    <div class="section-panel" id="dailyPanel">
+      <div class="daily-toolbar">
+        <h2 class="section-heading">Bookings per day</h2>
+        <div class="daily-legend">
+          <span class="daily-legend-item"><span class="daily-legend-dot daily-dot-new"></span>Aktiva</span>
+          <span class="daily-legend-item"><span class="daily-legend-dot daily-dot-checked"></span>Incheckade</span>
+        </div>
+      </div>
+      <div class="error-message" id="dailyError" role="alert"></div>
+      <div id="dailyOverview"></div>
     </div>
 
     <!-- Slots & Opening Hours panel -->

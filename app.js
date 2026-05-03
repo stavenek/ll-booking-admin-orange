@@ -44,6 +44,7 @@ function fetchJson(url, init) {
 }
 const STAGE_STORAGE_KEY = "llStage";
 const PWD_STORAGE_KEY = "llAdminPwd";
+const STATUS_FILTER_STORAGE_KEY = "llStatusFilter";
 
 function resolveStage() {
   var params = new URLSearchParams(window.location.search);
@@ -161,6 +162,9 @@ const statFilteredBox = document.getElementById("statFiltered");
 const bookingsPanel = document.getElementById("bookingsPanel");
 const templatesPanel = document.getElementById("templatesPanel");
 const slotsPanel = document.getElementById("slotsPanel");
+const dailyPanel = document.getElementById("dailyPanel");
+const dailyOverviewEl = document.getElementById("dailyOverview");
+const dailyError = document.getElementById("dailyError");
 const slotsError = document.getElementById("slotsError");
 const calTitle = document.getElementById("calTitle");
 const calendarGrid = document.getElementById("calendarGrid");
@@ -192,8 +196,12 @@ function switchTab(tabName) {
   bookingsPanel.classList.toggle("visible", tabName === "bookings");
   templatesPanel.classList.toggle("visible", tabName === "templates");
   slotsPanel.classList.toggle("visible", tabName === "slots");
+  dailyPanel.classList.toggle("visible", tabName === "daily");
   if (tabName === "slots" && adminPwd) {
     refreshSlotCounts();
+  }
+  if (tabName === "daily") {
+    renderDailyOverview();
   }
 }
 
@@ -255,7 +263,7 @@ function fetchBookings() {
     })
     .then(function (data) {
       allBookings = Array.isArray(data) ? data : [];
-      filteredBookings = allBookings;
+      filterBookings(filterInput.value.toLowerCase());
       filterContainer.classList.add("visible");
       navTabs.classList.add("visible");
       document.getElementById("statsCounter").classList.add("visible");
@@ -264,6 +272,7 @@ function fetchBookings() {
       renderTable();
       renderPagination();
       updateBookingStats();
+      renderDailyOverview();
       try { localStorage.setItem(PWD_STORAGE_KEY, adminPwd); } catch (e) {}
     })
     .catch(function (err) {
@@ -308,16 +317,60 @@ filterInput.addEventListener("input", function (evt) {
   renderPagination();
 });
 
+// ── Status filter ─────────────────────────────────────────────────
+const VALID_STATUS_FILTERS = ["NEW", "CHECKED_IN", "REMOVED"];
+var statusFilter = loadStatusFilter();
+
+function loadStatusFilter() {
+  try {
+    var raw = localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        var valid = parsed.filter(function (s) { return VALID_STATUS_FILTERS.indexOf(s) !== -1; });
+        if (valid.length > 0) return valid;
+      }
+    }
+  } catch (e) {}
+  return ["NEW"];
+}
+
+function persistStatusFilter() {
+  try { localStorage.setItem(STATUS_FILTER_STORAGE_KEY, JSON.stringify(statusFilter)); } catch (e) {}
+}
+
+function syncStatusFilterCheckboxes() {
+  document.querySelectorAll(".status-filter-cb").forEach(function (cb) {
+    cb.checked = statusFilter.indexOf(cb.getAttribute("data-status")) !== -1;
+  });
+}
+
+document.querySelectorAll(".status-filter-cb").forEach(function (cb) {
+  cb.addEventListener("change", function () {
+    var status = this.getAttribute("data-status");
+    var idx = statusFilter.indexOf(status);
+    if (this.checked && idx === -1) statusFilter.push(status);
+    if (!this.checked && idx !== -1) statusFilter.splice(idx, 1);
+    persistStatusFilter();
+    var term = filterInput.value.toLowerCase();
+    filterBookings(term);
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+  });
+});
+
+syncStatusFilterCheckboxes();
+
 function filterBookings(term) {
-  if (!term) {
-    filteredBookings = allBookings;
-  } else {
-    filteredBookings = allBookings.filter(function (b) {
-      return Object.values(b).some(function (v) {
-        return String(v).toLowerCase().includes(term);
-      });
+  filteredBookings = allBookings.filter(function (b) {
+    var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
+    if (statusFilter.indexOf(status) === -1) return false;
+    if (!term) return true;
+    return Object.values(b).some(function (v) {
+      return String(v).toLowerCase().includes(term);
     });
-  }
+  });
   updateBookingStats();
 }
 
@@ -325,6 +378,104 @@ function filterBookings(term) {
 function updateBookingStats() {
   totalBookingsSpan.textContent = allBookings.length;
   filteredBookingsSpan.textContent = filteredBookings.length;
+}
+
+// ── Daily overview ────────────────────────────────────────────────
+function todayDateStr() {
+  var t = new Date();
+  var m = String(t.getMonth() + 1).padStart(2, "0");
+  var d = String(t.getDate()).padStart(2, "0");
+  return t.getFullYear() + "-" + m + "-" + d;
+}
+
+function formatWeekday(dateStr) {
+  var dt = new Date(dateStr + "T00:00:00");
+  if (isNaN(dt.getTime())) return "";
+  return dt.toLocaleDateString(undefined, { weekday: "short" });
+}
+
+function renderDailyOverview() {
+  if (!dailyOverviewEl) return;
+  if (allBookings.length === 0 && availableDates.length === 0) {
+    dailyOverviewEl.innerHTML = '<div class="empty-state">No upcoming bookings.</div>';
+    return;
+  }
+
+  var today = todayDateStr();
+  var byDate = {};
+
+  allBookings.forEach(function (b) {
+    var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
+    if (status === "REMOVED") return;
+    if (!b.dateStr || b.dateStr < today) return;
+    if (!byDate[b.dateStr]) byDate[b.dateStr] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
+    var d = byDate[b.dateStr];
+    if (status === "CHECKED_IN") d.checkedCount += 1;
+    else d.newCount += 1;
+    d.adults += (typeof b.numberOfAdults === "number") ? b.numberOfAdults : 0;
+    d.kids += (typeof b.numberOfKids === "number") ? b.numberOfKids : 0;
+    d.pens += (typeof b.numberOfPensioners === "number") ? b.numberOfPensioners : 0;
+  });
+
+  availableDates.forEach(function (ds) {
+    if (ds < today) return;
+    if (!byDate[ds]) byDate[ds] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
+  });
+
+  var dates = Object.keys(byDate).sort();
+  if (dates.length === 0) {
+    dailyOverviewEl.innerHTML = '<div class="empty-state">No upcoming bookings.</div>';
+    return;
+  }
+
+  var maxTotal = 0;
+  dates.forEach(function (ds) {
+    var t = byDate[ds].newCount + byDate[ds].checkedCount;
+    if (t > maxTotal) maxTotal = t;
+  });
+  if (maxTotal === 0) maxTotal = 1;
+
+  var html = '<div class="daily-list">';
+  dates.forEach(function (ds) {
+    var d = byDate[ds];
+    var total = d.newCount + d.checkedCount;
+    var people = d.adults + d.kids + d.pens;
+    var widthPct = (total / maxTotal) * 100;
+    var newPct = total > 0 ? (d.newCount / total) * 100 : 0;
+    var checkedPct = total > 0 ? (d.checkedCount / total) * 100 : 0;
+    var rowClasses = ["daily-row"];
+    if (ds === today) rowClasses.push("daily-today");
+    if (total === 0) rowClasses.push("daily-empty");
+
+    html += '<div class="' + rowClasses.join(" ") + '">';
+    html += '<div class="daily-date">';
+    html += '<span class="daily-weekday">' + escapeHtml(formatWeekday(ds)) + (ds === today ? " · idag" : "") + "</span>";
+    html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
+    html += "</div>";
+
+    html += '<div class="daily-bar-wrap">';
+    if (total === 0) {
+      html += '<div class="daily-bar" style="width:4px"></div>';
+      html += '<div class="daily-meta">Inga bokningar</div>';
+    } else {
+      html += '<div class="daily-bar" style="width:' + widthPct.toFixed(2) + '%">';
+      if (d.newCount > 0) {
+        html += '<div class="daily-bar-segment daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + d.newCount + "</div>";
+      }
+      if (d.checkedCount > 0) {
+        html += '<div class="daily-bar-segment daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + d.checkedCount + "</div>";
+      }
+      html += "</div>";
+      html += '<div class="daily-meta">' + people + " pers (" + d.adults + " vuxna, " + d.kids + " barn" + (d.pens > 0 ? ", " + d.pens + " pens" : "") + ")</div>";
+    }
+    html += "</div>";
+
+    html += '<div class="daily-totals"><div class="daily-total-people"><span class="daily-total-bookings">' + total + "</span><span class=\"daily-total-label\">bokningar</span></div></div>";
+    html += "</div>";
+  });
+  html += "</div>";
+
+  dailyOverviewEl.innerHTML = html;
 }
 
 // ── Render table ──────────────────────────────────────────────────
