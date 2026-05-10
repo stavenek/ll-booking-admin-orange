@@ -1599,6 +1599,17 @@ body {
   border-left: 4px solid #ffffff;
 }
 
+/* ── Filter hint ─────────────────────────────────────────────── */
+.filter-hint {
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-radius: var(--radius-input);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
 /* ── Daily overview ──────────────────────────────────────────── */
 .daily-toolbar {
   display: flex;

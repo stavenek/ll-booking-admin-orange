@@ -378,6 +378,31 @@ function filterBookings(term) {
 function updateBookingStats() {
   totalBookingsSpan.textContent = allBookings.length;
   filteredBookingsSpan.textContent = filteredBookings.length;
+
+  var hint = document.getElementById("filterHint");
+  if (!hint) return;
+  var hidden = allBookings.length - filteredBookings.length;
+  if (hidden <= 0) {
+    hint.hidden = true;
+    hint.textContent = "";
+    return;
+  }
+  var hiddenByStatus = 0;
+  allBookings.forEach(function (b) {
+    var s = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
+    if (statusFilter.indexOf(s) === -1) hiddenByStatus += 1;
+  });
+  var parts = [hidden + " booking" + (hidden === 1 ? "" : "s") + " hidden"];
+  if (hiddenByStatus > 0 && statusFilter.length < VALID_STATUS_FILTERS.length) {
+    var unchecked = VALID_STATUS_FILTERS
+      .filter(function (s) { return statusFilter.indexOf(s) === -1; })
+      .map(function (s) { return s === "NEW" ? "Aktiva" : s === "CHECKED_IN" ? "Incheckade" : "Raderade"; });
+    parts.push("check " + unchecked.join(" / ") + " to include");
+  } else if (filterInput.value) {
+    parts.push("clear search to include");
+  }
+  hint.textContent = parts.join(" — ");
+  hint.hidden = false;
 }
 
 // ── Daily overview ────────────────────────────────────────────────
