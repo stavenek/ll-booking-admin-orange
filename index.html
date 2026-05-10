@@ -23,14 +23,12 @@
           <button class="btn-load" id="setPwdBtn" type="button">Login</button>
         </div>
       </div>
-      <div class="header-meta">
-        <time class="header-clock" id="nowClock" aria-live="off"></time>
-      </div>
       <nav class="nav-tabs" id="navTabs">
         <button class="nav-tab active" data-tab="bookings" type="button">Bookings</button>
         <button class="nav-tab" data-tab="daily" type="button">Daily Overview</button>
         <button class="nav-tab" data-tab="slots" type="button">Slots &amp; Opening Hours</button>
         <button class="nav-tab" data-tab="templates" type="button">Email Templates</button>
+        <span class="nav-build-stamp" id="buildStamp" title="Build timestamp"></span>
       </nav>
     </div>
   </header>
@@ -82,6 +80,7 @@
           <span class="daily-legend-item"><span class="daily-legend-dot daily-dot-new"></span>Aktiva</span>
           <span class="daily-legend-item"><span class="daily-legend-dot daily-dot-checked"></span>Incheckade</span>
         </div>
+        <button class="btn-reload" id="reloadDailyBtn" type="button" aria-label="Reload daily overview" title="Reload">↻</button>
       </div>
       <div class="error-message" id="dailyError" role="alert"></div>
       <div id="dailyOverview"></div>
@@ -89,7 +88,10 @@
 
     <!-- Slots & Opening Hours panel -->
     <div class="section-panel" id="slotsPanel">
-      <h2 class="section-heading">Slots &amp; Opening Hours</h2>
+      <div class="panel-header">
+        <h2 class="section-heading">Slots &amp; Opening Hours</h2>
+        <button class="btn-reload" id="reloadSlotsBtn" type="button" aria-label="Reload slots" title="Reload">↻</button>
+      </div>
       <div class="error-message" id="slotsError" role="alert"></div>
       <div class="slots-layout">
         <div class="calendar-container">
@@ -116,7 +118,10 @@
 
     <!-- Email Templates panel -->
     <div class="section-panel" id="templatesPanel">
-      <h2 class="section-heading">Email Templates</h2>
+      <div class="panel-header">
+        <h2 class="section-heading">Email Templates</h2>
+        <button class="btn-reload" id="reloadTemplatesBtn" type="button" aria-label="Reload templates" title="Reload">↻</button>
+      </div>
       <div class="error-message" id="emailError" role="alert"></div>
       <div id="templatesList"></div>
     </div>
@@ -191,6 +196,7 @@
     </div>
   </div>
 
+  <script src="build-info.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

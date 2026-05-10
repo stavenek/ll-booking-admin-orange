@@ -143,18 +143,14 @@ body {
   margin-bottom: var(--space-md);
 }
 
-.header-meta {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--space-sm);
-}
-
-.header-clock {
+.nav-build-stamp {
+  margin-left: auto;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.7);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  align-self: center;
 }
 
 .app-title {
@@ -1668,6 +1664,14 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
 }

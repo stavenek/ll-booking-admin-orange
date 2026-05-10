@@ -189,28 +189,35 @@ const tplActiveInput = document.getElementById("tplActive");
 const saveTemplateBtn = document.getElementById("saveTemplateBtn");
 const cancelTemplateBtn = document.getElementById("cancelTemplateBtn");
 
-// ── Live clock ────────────────────────────────────────────────────
-(function startClock() {
-  var el = document.getElementById("nowClock");
+// ── Build stamp ───────────────────────────────────────────────────
+(function renderBuildStamp() {
+  var el = document.getElementById("buildStamp");
   if (!el) return;
-  function tick() {
-    var now = new Date();
-    el.textContent = now.toLocaleString("sv-SE", {
-      weekday: "short",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    el.dateTime = now.toISOString();
+  var raw = window.LL_BUILD_TIME;
+  if (!raw) {
+    el.textContent = "dev";
+    return;
   }
-  tick();
-  setInterval(tick, 1000);
+  var dt = new Date(raw);
+  if (isNaN(dt.getTime())) {
+    el.textContent = "build " + raw;
+    return;
+  }
+  el.textContent = "build " + dt.toLocaleString("sv-SE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  el.title = "Build " + raw;
 })();
 
+
 // ── Navigation tabs ───────────────────────────────────────────────
+var templatesFetched = false;
+var slotConfigsFetched = false;
+
 function switchTab(tabName) {
   document.querySelectorAll(".nav-tab").forEach(function (btn) {
     btn.classList.toggle("active", btn.getAttribute("data-tab") === tabName);
@@ -220,7 +227,15 @@ function switchTab(tabName) {
   slotsPanel.classList.toggle("visible", tabName === "slots");
   dailyPanel.classList.toggle("visible", tabName === "daily");
   if (tabName === "slots" && adminPwd) {
+    if (!slotConfigsFetched) {
+      slotConfigsFetched = true;
+      fetchSlotConfigs().catch(function () { slotConfigsFetched = false; });
+    }
     refreshSlotCounts();
+  }
+  if (tabName === "templates" && adminPwd && !templatesFetched) {
+    templatesFetched = true;
+    fetchEmailTemplates().catch(function () { templatesFetched = false; });
   }
   if (tabName === "daily") {
     renderDailyOverview();
@@ -253,7 +268,12 @@ setPwdBtn.addEventListener("click", function () {
   setPwdBtn.disabled = true;
   setPwdBtn.textContent = "";
   setPwdBtn.classList.add("loading");
-  Promise.all([fetchBookings(), fetchEmailTemplates(), fetchSlotConfigs()])
+  // Show the chrome immediately so the page feels responsive while data loads.
+  filterContainer.classList.add("visible");
+  navTabs.classList.add("visible");
+  document.getElementById("statsCounter").classList.add("visible");
+  bookingsPanel.classList.add("visible");
+  fetchBookings()
     .finally(function () {
       setPwdBtn.disabled = false;
       setPwdBtn.textContent = "Login";
@@ -268,14 +288,13 @@ pwdInput.addEventListener("keydown", function (evt) {
 });
 
 function fetchBookings() {
-  filterContainer.classList.remove("visible");
   tableContainer.innerHTML = '<div class="empty-state">Loading...</div>';
   paginationDiv.innerHTML = "";
 
-  return fetchAvailableDates()
-    .then(function () {
-      return fetchJson(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
-    })
+  var bookingsReq = fetchJson(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
+  var slotsReq = fetchAvailableDates();
+
+  return Promise.all([bookingsReq, slotsReq])
     .catch(function (err) {
       if (err.status === 400 || err.status === 401 || err.status === 403) {
         try { localStorage.removeItem(PWD_STORAGE_KEY); } catch (e) {}
@@ -283,7 +302,8 @@ function fetchBookings() {
       }
       throw err;
     })
-    .then(function (data) {
+    .then(function (results) {
+      var data = results[0];
       allBookings = Array.isArray(data) ? data : [];
       filterBookings(filterInput.value.toLowerCase());
       filterContainer.classList.add("visible");
@@ -320,15 +340,26 @@ function fetchAvailableDates() {
 }
 
 // ── Filter ────────────────────────────────────────────────────────
-document.getElementById("reloadBookingsBtn").addEventListener("click", function () {
-  if (!adminPwd) return;
-  var btn = this;
-  btn.disabled = true;
-  btn.classList.add("loading");
-  fetchBookings().finally(function () {
-    btn.disabled = false;
-    btn.classList.remove("loading");
+function wireReloadButton(id, action) {
+  var btn = document.getElementById(id);
+  if (!btn) return;
+  btn.addEventListener("click", function () {
+    if (!adminPwd) return;
+    btn.disabled = true;
+    btn.classList.add("loading");
+    Promise.resolve(action()).finally(function () {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+    });
   });
+}
+
+wireReloadButton("reloadBookingsBtn", fetchBookings);
+wireReloadButton("reloadDailyBtn", fetchBookings);
+wireReloadButton("reloadTemplatesBtn", fetchEmailTemplates);
+wireReloadButton("reloadSlotsBtn", function () {
+  return Promise.all([fetchSlotConfigs(), fetchAvailableDates()])
+    .then(function () { renderCalendar(); if (selectedDateStr) renderDayDetail(); });
 });
 
 filterInput.addEventListener("input", function (evt) {
@@ -537,13 +568,19 @@ const COLUMNS = [
   { key: "timeStr", label: "Time", type: "string" },
   { key: "name", label: "Name", type: "string" },
   { key: "email", label: "Email", type: "string" },
-  { key: "numberOfAdults", label: "Adults", type: "number" },
   { key: "numberOfKids", label: "Kids", type: "number" },
+  { key: "numberOfAdults", label: "Adults", type: "number" },
   { key: "numberOfPensioners", label: "Pens", type: "number" },
   { key: "status", label: "Status", type: "string" },
   { key: "created", label: "Created", type: "string" },
   { key: "bookingId", label: "ID", type: "string" },
 ];
+
+function toBookingCount(v) {
+  if (v == null) return 0;
+  var n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
 
 var sortState = loadSortState();
 
@@ -649,25 +686,28 @@ function renderTable() {
     // Email
     html += '<td class="cell-email"><input type="email" data-idx="' + globalIdx + '" class="email-input" value="' + escapeAttr(b.email) + '" aria-label="Email for booking" /></td>';
 
-    // Adults
-    html += '<td><select data-idx="' + globalIdx + '" class="adults-select" aria-label="Number of adults for ' + escapeHtml(b.name) + '">';
-    for (var i = 1; i <= 10; i++) {
-      html += '<option value="' + i + '"' + (b.numberOfAdults == i ? " selected" : "") + ">" + i + "</option>";
-    }
-    html += "</select></td>";
+    var kids = toBookingCount(b.numberOfKids);
+    var adults = toBookingCount(b.numberOfAdults != null ? b.numberOfAdults : b.numberOfPeople);
+    var pens = toBookingCount(b.numberOfPensioners);
 
     // Kids
     html += '<td><select data-idx="' + globalIdx + '" class="kids-select" aria-label="Number of kids for ' + escapeHtml(b.name) + '">';
     for (var j = 0; j <= 10; j++) {
-      html += '<option value="' + j + '"' + (b.numberOfKids == j ? " selected" : "") + ">" + j + "</option>";
+      html += '<option value="' + j + '"' + (kids === j ? " selected" : "") + ">" + j + "</option>";
+    }
+    html += "</select></td>";
+
+    // Adults
+    html += '<td><select data-idx="' + globalIdx + '" class="adults-select" aria-label="Number of adults for ' + escapeHtml(b.name) + '">';
+    for (var i = 1; i <= 10; i++) {
+      html += '<option value="' + i + '"' + (adults === i ? " selected" : "") + ">" + i + "</option>";
     }
     html += "</select></td>";
 
     // Pensioners
-    var pens = (typeof b.numberOfPensioners === "number") ? b.numberOfPensioners : 0;
     html += '<td><select data-idx="' + globalIdx + '" class="pens-select" aria-label="Number of pensioners for ' + escapeHtml(b.name) + '">';
     for (var k = 0; k <= 10; k++) {
-      html += '<option value="' + k + '"' + (pens == k ? " selected" : "") + ">" + k + "</option>";
+      html += '<option value="' + k + '"' + (pens === k ? " selected" : "") + ">" + k + "</option>";
     }
     html += "</select></td>";
 

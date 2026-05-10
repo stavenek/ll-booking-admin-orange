@@ -1,0 +1,13 @@
+#!/bin/sh
+# Refresh build-info.js with the current timestamp and stage it so the
+# committed snapshot carries an accurate build label. The displayed
+# stamp updates only when commits are made, exactly as a build number
+# should.
+set -e
+
+if [ ! -f package.json ]; then
+  exit 0
+fi
+
+npm run --silent stamp >/dev/null
+git add build-info.js
