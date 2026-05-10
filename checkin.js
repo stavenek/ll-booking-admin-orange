@@ -3,7 +3,7 @@ const STAGES = {
   dev: "https://95gewohkpj.execute-api.eu-north-1.amazonaws.com/dev/llb/v1",
   prod: "https://eay07x2tc7.execute-api.eu-north-1.amazonaws.com/prod/llb/v1",
 };
-const PWD_KEY = "llCheckinPwd";
+const PWD_KEY = "llAdminPwd";
 const STAGE_KEY = "llCheckinStage";
 
 function resolveStage() {
@@ -183,7 +183,7 @@ function attemptLogin() {
     loginBtn.disabled = false;
     loginBtn.textContent = "Logga in";
     if (err.status === 400 || err.status === 401 || err.status === 403) {
-      try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+      try { localStorage.removeItem(PWD_KEY); } catch (e) {}
       showError("Fel lösenord");
     } else {
       showError("Inloggning misslyckades: " + err.message);
@@ -197,7 +197,7 @@ function validateAndStart(pwd) {
   return fetchJson(API_BASE + "/slot-configs?admin=" + encodeURIComponent(pwd))
     .then(function () {
       adminPwd = pwd;
-      try { sessionStorage.setItem(PWD_KEY, pwd); } catch (e) {}
+      try { localStorage.setItem(PWD_KEY, pwd); } catch (e) {}
       return loadInitialAndRender();
     });
 }
@@ -557,14 +557,14 @@ function logout() {
   currentBookings = [];
   allSlots = [];
   adminPwd = "";
-  try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+  try { localStorage.removeItem(PWD_KEY); } catch (e) {}
   renderLogin();
 }
 
 // ── Boot ───────────────────────────────────────────────────────
 (function boot() {
   var saved = "";
-  try { saved = sessionStorage.getItem(PWD_KEY) || ""; } catch (e) {}
+  try { saved = localStorage.getItem(PWD_KEY) || ""; } catch (e) {}
   if (!saved) {
     renderLogin();
     return;
@@ -575,7 +575,7 @@ function logout() {
   logoutBtn.onclick = logout;
   validateAndStart(saved).catch(function (err) {
     adminPwd = "";
-    try { sessionStorage.removeItem(PWD_KEY); } catch (e) {}
+    try { localStorage.removeItem(PWD_KEY); } catch (e) {}
     renderLogin({ message: err.status === 400 || err.status === 401 || err.status === 403
       ? "Sparat lösenord ogiltigt — logga in igen."
       : "Auto-login misslyckades: " + err.message });
