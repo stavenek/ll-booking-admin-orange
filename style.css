@@ -143,6 +143,20 @@ body {
   margin-bottom: var(--space-md);
 }
 
+.header-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
+.header-clock {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 .app-title {
   font-size: 28px;
   font-weight: var(--font-weight-extrabold);

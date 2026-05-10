@@ -189,6 +189,27 @@ const tplActiveInput = document.getElementById("tplActive");
 const saveTemplateBtn = document.getElementById("saveTemplateBtn");
 const cancelTemplateBtn = document.getElementById("cancelTemplateBtn");
 
+// ── Live clock ────────────────────────────────────────────────────
+(function startClock() {
+  var el = document.getElementById("nowClock");
+  if (!el) return;
+  function tick() {
+    var now = new Date();
+    el.textContent = now.toLocaleString("sv-SE", {
+      weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    el.dateTime = now.toISOString();
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
 // ── Navigation tabs ───────────────────────────────────────────────
 function switchTab(tabName) {
   document.querySelectorAll(".nav-tab").forEach(function (btn) {
