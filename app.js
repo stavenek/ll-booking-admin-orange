@@ -430,6 +430,12 @@ function renderDailyOverview() {
   var today = todayDateStr();
   var byDate = {};
 
+  function toCount(v) {
+    if (v == null) return 0;
+    var n = Number(v);
+    return isNaN(n) ? 0 : n;
+  }
+
   allBookings.forEach(function (b) {
     var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
     if (status === "REMOVED") return;
@@ -438,9 +444,9 @@ function renderDailyOverview() {
     var d = byDate[b.dateStr];
     if (status === "CHECKED_IN") d.checkedCount += 1;
     else d.newCount += 1;
-    d.adults += (typeof b.numberOfAdults === "number") ? b.numberOfAdults : 0;
-    d.kids += (typeof b.numberOfKids === "number") ? b.numberOfKids : 0;
-    d.pens += (typeof b.numberOfPensioners === "number") ? b.numberOfPensioners : 0;
+    d.adults += toCount(b.numberOfAdults != null ? b.numberOfAdults : b.numberOfPeople);
+    d.kids += toCount(b.numberOfKids);
+    d.pens += toCount(b.numberOfPensioners);
   });
 
   availableDates.forEach(function (ds) {

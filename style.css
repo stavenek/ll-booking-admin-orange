@@ -1684,19 +1684,23 @@ body {
 .daily-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 4px;
 }
 
 .daily-row {
   display: grid;
-  grid-template-columns: 180px 1fr auto;
+  grid-template-columns: 175px 1fr auto;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  padding: 6px var(--space-md);
   background: var(--color-surface);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
   box-shadow: var(--shadow-sm);
+}
+
+.daily-date {
+  white-space: nowrap;
 }
 
 .daily-row.daily-today {
@@ -1710,8 +1714,8 @@ body {
 
 .daily-date {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: var(--space-sm);
 }
 
 .daily-weekday {
@@ -1727,7 +1731,7 @@ body {
 }
 
 .daily-datestr {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-extrabold);
   color: var(--color-text);
 }
@@ -1735,13 +1739,13 @@ body {
 .daily-bar-wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
 }
 
 .daily-bar {
   display: flex;
-  height: 24px;
+  height: 18px;
   border-radius: var(--radius-input);
   overflow: hidden;
   background: var(--color-border);
@@ -1754,7 +1758,7 @@ body {
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   font-weight: var(--font-weight-bold);
   min-width: 0;
   overflow: hidden;
@@ -1767,17 +1771,18 @@ body {
 .daily-meta {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .daily-totals {
   display: flex;
   gap: var(--space-md);
-  align-items: center;
+  align-items: baseline;
   white-space: nowrap;
 }
 
 .daily-total-bookings {
-  font-size: 28px;
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-extrabold);
   color: var(--color-text);
   line-height: 1;
@@ -1786,13 +1791,12 @@ body {
 .daily-total-label {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
-  margin-top: 2px;
+  margin-left: 4px;
 }
 
 .daily-total-people {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: baseline;
 }
 
 /* ── Responsive ────────────────────────────────────────────────── */
