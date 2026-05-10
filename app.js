@@ -45,6 +45,7 @@ function fetchJson(url, init) {
 const STAGE_STORAGE_KEY = "llStage";
 const PWD_STORAGE_KEY = "llAdminPwd";
 const STATUS_FILTER_STORAGE_KEY = "llStatusFilter";
+const SORT_STORAGE_KEY = "llBookingSort";
 
 function resolveStage() {
   var params = new URLSearchParams(window.location.search);
@@ -503,6 +504,60 @@ function renderDailyOverview() {
   dailyOverviewEl.innerHTML = html;
 }
 
+// ── Sort state ────────────────────────────────────────────────────
+const COLUMNS = [
+  { key: "dateStr", label: "Date", type: "string" },
+  { key: "timeStr", label: "Time", type: "string" },
+  { key: "name", label: "Name", type: "string" },
+  { key: "email", label: "Email", type: "string" },
+  { key: "numberOfAdults", label: "Adults", type: "number" },
+  { key: "numberOfKids", label: "Kids", type: "number" },
+  { key: "numberOfPensioners", label: "Pens", type: "number" },
+  { key: "status", label: "Status", type: "string" },
+  { key: "created", label: "Created", type: "string" },
+  { key: "bookingId", label: "ID", type: "string" },
+];
+
+var sortState = loadSortState();
+
+function loadSortState() {
+  try {
+    var raw = localStorage.getItem(SORT_STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && COLUMNS.some(function (c) { return c.key === parsed.key; }) &&
+          (parsed.dir === "asc" || parsed.dir === "desc")) {
+        return { key: parsed.key, dir: parsed.dir };
+      }
+    }
+  } catch (e) {}
+  return { key: "dateStr", dir: "asc" };
+}
+
+function persistSortState() {
+  try { localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sortState)); } catch (e) {}
+}
+
+function compareBookings(a, b, key, dir) {
+  var col = COLUMNS.find(function (c) { return c.key === key; }) || { type: "string" };
+  var av = a[key];
+  var bv = b[key];
+  var cmp;
+  if (col.type === "number") {
+    var an = (typeof av === "number") ? av : -Infinity;
+    var bn = (typeof bv === "number") ? bv : -Infinity;
+    cmp = an - bn;
+  } else {
+    var as = av == null ? "" : String(av);
+    var bs = bv == null ? "" : String(bv);
+    cmp = as.localeCompare(bs, undefined, { numeric: true, sensitivity: "base" });
+  }
+  if (cmp === 0 && key !== "bookingId") {
+    cmp = String(a.bookingId || "").localeCompare(String(b.bookingId || ""));
+  }
+  return dir === "desc" ? -cmp : cmp;
+}
+
 // ── Render table ──────────────────────────────────────────────────
 function renderTable() {
   tableContainer.innerHTML = "";
@@ -512,18 +567,26 @@ function renderTable() {
   }
 
   var sortedBookings = filteredBookings.slice().sort(function (a, b) {
-    var da = Date.parse(a.dateStr);
-    var db = Date.parse(b.dateStr);
-    if (!isNaN(da) && !isNaN(db)) return da - db;
-    return a.dateStr.localeCompare(b.dateStr);
+    return compareBookings(a, b, sortState.key, sortState.dir);
   });
 
   var start = (currentPage - 1) * PAGE_SIZE;
   var pageItems = sortedBookings.slice(start, start + PAGE_SIZE);
-  var headers = ["Date", "Time", "Name", "Email", "Adults", "Kids", "Pens", "Status", "Created", "ID"];
 
   var html = '<div class="table-scroll"><table class="booking-table"><thead><tr>';
-  headers.forEach(function (h) { html += "<th>" + h + "</th>"; });
+  COLUMNS.forEach(function (col) {
+    var active = sortState.key === col.key;
+    var indicator = active ? (sortState.dir === "asc" ? "▲" : "▼") : "↕";
+    var thClasses = ["sortable-header"];
+    if (active) thClasses.push("sortable-active");
+    var ariaSort = active ? (sortState.dir === "asc" ? "ascending" : "descending") : "none";
+    html += '<th class="' + thClasses.join(" ") + '" data-sort-key="' + col.key + '" aria-sort="' + ariaSort + '">';
+    html += '<button type="button" class="sort-button" data-sort-key="' + col.key + '">';
+    html += '<span class="sort-label">' + col.label + '</span>';
+    html += '<span class="sort-indicator" aria-hidden="true">' + indicator + '</span>';
+    html += '</button>';
+    html += '</th>';
+  });
   html += "</tr></thead><tbody>";
 
   pageItems.forEach(function (b, idx) {
@@ -603,6 +666,25 @@ function renderTable() {
 
   // Attach change listeners
   attachSelectListeners(sortedBookings);
+  attachSortListeners();
+}
+
+function attachSortListeners() {
+  document.querySelectorAll(".sort-button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = this.getAttribute("data-sort-key");
+      if (sortState.key === key) {
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.key = key;
+        sortState.dir = "asc";
+      }
+      persistSortState();
+      currentPage = 1;
+      renderTable();
+      renderPagination();
+    });
+  });
 }
 
 function attachSelectListeners(sortedBookings) {

@@ -554,6 +554,44 @@ body {
   border-top-right-radius: var(--radius-card);
 }
 
+.booking-table thead th.sortable-header {
+  padding: 0;
+}
+
+.booking-table thead th .sort-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 14px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.booking-table thead th .sort-button:hover {
+  background: var(--color-header-accent);
+}
+
+.booking-table thead th.sortable-active {
+  background: var(--color-header-accent);
+}
+
+.booking-table thead th .sort-indicator {
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.booking-table thead th.sortable-active .sort-indicator {
+  opacity: 1;
+}
+
 .booking-table tbody td {
   padding: var(--space-sm) 14px;
   border-bottom: 1px solid var(--color-border);
