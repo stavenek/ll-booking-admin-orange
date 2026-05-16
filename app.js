@@ -309,7 +309,6 @@ function fetchBookings() {
       filterContainer.classList.add("visible");
       navTabs.classList.add("visible");
       document.getElementById("statsCounter").classList.add("visible");
-      bookingsPanel.classList.add("visible");
       currentPage = 1;
       renderTable();
       renderPagination();
