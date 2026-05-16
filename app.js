@@ -415,7 +415,9 @@ document.querySelectorAll(".status-filter-cb").forEach(function (cb) {
 syncStatusFilterCheckboxes();
 
 function filterBookings(term) {
+  var today = todayDateStr();
   filteredBookings = allBookings.filter(function (b) {
+    if (b.dateStr && b.dateStr < today) return false;
     var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
     if (statusFilter.indexOf(status) === -1) return false;
     if (!term) return true;
