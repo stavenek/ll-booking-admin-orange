@@ -417,7 +417,7 @@ syncStatusFilterCheckboxes();
 function filterBookings(term) {
   var today = todayDateStr();
   filteredBookings = allBookings.filter(function (b) {
-    if (b.dateStr && b.dateStr < today) return false;
+    if (b.dateStr && normalizeDateStr(b.dateStr) < normalizeDateStr(today)) return false;
     var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
     if (statusFilter.indexOf(status) === -1) return false;
     if (!term) return true;
@@ -467,6 +467,12 @@ function todayDateStr() {
   return t.getFullYear() + "-" + m + "-" + d;
 }
 
+// Accepts "YYYY-MM-DD" or "YYYYMMDD"; returns "YYYYMMDD" for safe lex compare.
+function normalizeDateStr(s) {
+  if (!s) return "";
+  return String(s).replace(/-/g, "");
+}
+
 function formatWeekday(dateStr) {
   var dt = new Date(dateStr + "T00:00:00");
   if (isNaN(dt.getTime())) return "";
@@ -492,7 +498,7 @@ function renderDailyOverview() {
   allBookings.forEach(function (b) {
     var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
     if (status === "REMOVED") return;
-    if (!b.dateStr || b.dateStr < today) return;
+    if (!b.dateStr || normalizeDateStr(b.dateStr) < normalizeDateStr(today)) return;
     if (!byDate[b.dateStr]) byDate[b.dateStr] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
     var d = byDate[b.dateStr];
     if (status === "CHECKED_IN") d.checkedCount += 1;
@@ -503,7 +509,7 @@ function renderDailyOverview() {
   });
 
   availableDates.forEach(function (ds) {
-    if (ds < today) return;
+    if (normalizeDateStr(ds) < normalizeDateStr(today)) return;
     if (!byDate[ds]) byDate[ds] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
   });
 
