@@ -1707,7 +1707,7 @@ body {
 
 .daily-row {
   display: grid;
-  grid-template-columns: 175px 1fr auto;
+  grid-template-columns: 175px 110px 1fr;
   align-items: center;
   gap: var(--space-md);
   padding: 6px var(--space-md);
@@ -1715,6 +1715,56 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   box-shadow: var(--shadow-sm);
+}
+
+.daily-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.daily-slot {
+  display: grid;
+  grid-template-columns: 48px 1fr 32px;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.daily-slot-time {
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.daily-slot-line-wrap {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 1px;
+  background: transparent;
+}
+
+.daily-slot-line {
+  display: block;
+  height: 1px;
+  background: var(--color-text);
+  min-width: 1px;
+}
+
+.daily-slot-count {
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.daily-slots-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .daily-date {

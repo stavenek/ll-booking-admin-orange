@@ -474,9 +474,13 @@ function normalizeDateStr(s) {
 }
 
 function formatWeekday(dateStr) {
-  var dt = new Date(dateStr + "T00:00:00");
+  var n = normalizeDateStr(dateStr);
+  if (n.length !== 8) return "";
+  var iso = n.slice(0, 4) + "-" + n.slice(4, 6) + "-" + n.slice(6, 8);
+  var dt = new Date(iso + "T00:00:00");
   if (isNaN(dt.getTime())) return "";
-  return dt.toLocaleDateString(undefined, { weekday: "short" });
+  var sv = ["Sö", "Må", "Ti", "Ons", "To", "Fr", "Lö"];
+  return sv[dt.getDay()];
 }
 
 function renderDailyOverview() {
@@ -495,22 +499,32 @@ function renderDailyOverview() {
     return isNaN(n) ? 0 : n;
   }
 
+  function ensureDay(ds) {
+    if (!byDate[ds]) byDate[ds] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0, slots: {} };
+    return byDate[ds];
+  }
+
   allBookings.forEach(function (b) {
     var status = (typeof b.status === "string" && VALID_STATUS_FILTERS.indexOf(b.status) !== -1) ? b.status : "NEW";
     if (status === "REMOVED") return;
     if (!b.dateStr || normalizeDateStr(b.dateStr) < normalizeDateStr(today)) return;
-    if (!byDate[b.dateStr]) byDate[b.dateStr] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
-    var d = byDate[b.dateStr];
+    var d = ensureDay(b.dateStr);
     if (status === "CHECKED_IN") d.checkedCount += 1;
     else d.newCount += 1;
-    d.adults += toCount(b.numberOfAdults != null ? b.numberOfAdults : b.numberOfPeople);
-    d.kids += toCount(b.numberOfKids);
-    d.pens += toCount(b.numberOfPensioners);
+    var adults = toCount(b.numberOfAdults != null ? b.numberOfAdults : b.numberOfPeople);
+    var kids = toCount(b.numberOfKids);
+    var pens = toCount(b.numberOfPensioners);
+    d.adults += adults;
+    d.kids += kids;
+    d.pens += pens;
+    var t = b.timeStr || "";
+    if (!d.slots[t]) d.slots[t] = 0;
+    d.slots[t] += adults + kids + pens;
   });
 
   availableDates.forEach(function (ds) {
     if (normalizeDateStr(ds) < normalizeDateStr(today)) return;
-    if (!byDate[ds]) byDate[ds] = { newCount: 0, checkedCount: 0, adults: 0, kids: 0, pens: 0 };
+    ensureDay(ds);
   });
 
   var dates = Object.keys(byDate).sort();
@@ -519,21 +533,24 @@ function renderDailyOverview() {
     return;
   }
 
+  var maxSlotPeople = 0;
   var maxTotal = 0;
   dates.forEach(function (ds) {
-    var t = byDate[ds].newCount + byDate[ds].checkedCount;
+    var day = byDate[ds];
+    var slots = day.slots;
+    Object.keys(slots).forEach(function (t) {
+      if (slots[t] > maxSlotPeople) maxSlotPeople = slots[t];
+    });
+    var t = day.newCount + day.checkedCount;
     if (t > maxTotal) maxTotal = t;
   });
+  if (maxSlotPeople === 0) maxSlotPeople = 1;
   if (maxTotal === 0) maxTotal = 1;
 
   var html = '<div class="daily-list">';
   dates.forEach(function (ds) {
     var d = byDate[ds];
     var total = d.newCount + d.checkedCount;
-    var people = d.adults + d.kids + d.pens;
-    var widthPct = (total / maxTotal) * 100;
-    var newPct = total > 0 ? (d.newCount / total) * 100 : 0;
-    var checkedPct = total > 0 ? (d.checkedCount / total) * 100 : 0;
     var rowClasses = ["daily-row"];
     if (ds === today) rowClasses.push("daily-today");
     if (total === 0) rowClasses.push("daily-empty");
@@ -544,24 +561,45 @@ function renderDailyOverview() {
     html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
     html += "</div>";
 
+    html += '<div class="daily-totals"><div class="daily-total-people"><span class="daily-total-bookings">' + total + "</span><span class=\"daily-total-label\">bokningar</span></div></div>";
+
+    html += '<div class="daily-slots">';
+
+    var totalWidthPct = (total / maxTotal) * 100;
+    var newPct = total > 0 ? (d.newCount / total) * 100 : 0;
+    var checkedPct = total > 0 ? (d.checkedCount / total) * 100 : 0;
     html += '<div class="daily-bar-wrap">';
     if (total === 0) {
       html += '<div class="daily-bar" style="width:4px"></div>';
-      html += '<div class="daily-meta">Inga bokningar</div>';
     } else {
-      html += '<div class="daily-bar" style="width:' + widthPct.toFixed(2) + '%">';
+      html += '<div class="daily-bar" style="width:' + totalWidthPct.toFixed(2) + '%">';
       if (d.newCount > 0) {
-        html += '<div class="daily-bar-segment daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + d.newCount + "</div>";
+        var newLabel = d.checkedCount > 0 ? String(d.newCount) : d.newCount + " Bookings";
+        html += '<div class="daily-bar-segment daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + newLabel + "</div>";
       }
       if (d.checkedCount > 0) {
-        html += '<div class="daily-bar-segment daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + d.checkedCount + "</div>";
+        html += '<div class="daily-bar-segment daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + d.checkedCount + " Bookings</div>";
       }
       html += "</div>";
-      html += '<div class="daily-meta">' + people + " pers (" + d.adults + " vuxna, " + d.kids + " barn" + (d.pens > 0 ? ", " + d.pens + " pens" : "") + ")</div>";
     }
     html += "</div>";
 
-    html += '<div class="daily-totals"><div class="daily-total-people"><span class="daily-total-bookings">' + total + "</span><span class=\"daily-total-label\">bokningar</span></div></div>";
+    var slotTimes = Object.keys(d.slots).sort();
+    if (slotTimes.length === 0) {
+      html += '<div class="daily-slots-empty">Inga bokningar</div>';
+    } else {
+      slotTimes.forEach(function (t) {
+        var people = d.slots[t];
+        var pct = (people / maxSlotPeople) * 100;
+        html += '<div class="daily-slot">';
+        html += '<span class="daily-slot-time">' + escapeHtml(t || "—") + "</span>";
+        html += '<span class="daily-slot-line-wrap"><span class="daily-slot-line" style="width:' + pct.toFixed(2) + '%"></span></span>';
+        html += '<span class="daily-slot-count">' + people + "p</span>";
+        html += "</div>";
+      });
+    }
+    html += "</div>";
+
     html += "</div>";
   });
   html += "</div>";
