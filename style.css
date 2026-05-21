@@ -1726,10 +1726,17 @@ body {
 
 .daily-slot {
   display: grid;
-  grid-template-columns: 48px 1fr 32px;
+  grid-template-columns: 56px 48px 1fr 32px;
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
+}
+
+.daily-slot-weather {
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .daily-slot-time {

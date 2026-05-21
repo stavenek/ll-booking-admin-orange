@@ -81,6 +81,61 @@ let calYear = 0;
 let calMonth = 0; // 0-indexed
 const DEFAULT_CAPACITY = 50;
 
+const VINTROSA_LAT = 59.2667;
+const VINTROSA_LON = 14.9333;
+let weatherByHour = {}; // key: "YYYY-MM-DD HH:00" Europe/Stockholm, value: { temp, symbol }
+
+const WEATHER_EMOJI = {
+  1: "☀️", 2: "🌤️", 3: "⛅", 4: "⛅", 5: "☁️", 6: "☁️", 7: "🌫️",
+  8: "🌦️", 9: "🌦️", 10: "🌦️", 11: "⛈️",
+  12: "🌨️", 13: "🌨️", 14: "🌨️", 15: "🌨️", 16: "🌨️", 17: "🌨️",
+  18: "🌧️", 19: "🌧️", 20: "🌧️", 21: "⛈️",
+  22: "🌨️", 23: "🌨️", 24: "🌨️", 25: "❄️", 26: "❄️", 27: "❄️",
+};
+
+function isoUtcToLocalHourKey(iso) {
+  var parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Stockholm",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date(iso)).reduce(function (acc, p) {
+    acc[p.type] = p.value;
+    return acc;
+  }, {});
+  return parts.year + "-" + parts.month + "-" + parts.day + " " + parts.hour + ":00";
+}
+
+function fetchWeather() {
+  var url = "https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1" +
+    "/geotype/point/lon/" + VINTROSA_LON + "/lat/" + VINTROSA_LAT + "/data.json";
+  return fetch(url)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data || !Array.isArray(data.timeSeries)) return;
+      var timestamps = [];
+      data.timeSeries.forEach(function (entry) {
+        if (!entry || !entry.data) return;
+        var key = isoUtcToLocalHourKey(entry.time);
+        weatherByHour[key] = {
+          temp: Math.round(entry.data.air_temperature),
+          symbol: entry.data.symbol_code,
+        };
+        timestamps.push(new Date(entry.time).getTime());
+      });
+      // SMHI:s upplösning glesnar (1h → 3h → 6h). Forward-fill varje timme
+      // mellan första och sista entry så slot-lookups träffar närmaste tidigare värde.
+      if (timestamps.length < 2) return;
+      timestamps.sort(function (a, b) { return a - b; });
+      var prev = null;
+      for (var ms = timestamps[0]; ms <= timestamps[timestamps.length - 1]; ms += 3600000) {
+        var k = isoUtcToLocalHourKey(new Date(ms).toISOString());
+        if (weatherByHour[k]) prev = weatherByHour[k];
+        else if (prev) weatherByHour[k] = prev;
+      }
+    })
+    .catch(function () { /* tyst — Daily Overview renderas utan väder */ });
+}
+
 // Presets derived from ll-booking-backend/lambda/util/legacySlotConfigs.ts
 const SLOT_PRESETS = [
   {
@@ -294,7 +349,7 @@ function fetchBookings() {
   var bookingsReq = fetchJson(API_BASE + "/bookings?admin=" + encodeURIComponent(adminPwd));
   var slotsReq = fetchAvailableDates();
 
-  return Promise.all([bookingsReq, slotsReq])
+  return Promise.all([bookingsReq, slotsReq, fetchWeather()])
     .catch(function (err) {
       if (err.status === 400 || err.status === 401 || err.status === 403) {
         try { localStorage.removeItem(PWD_STORAGE_KEY); } catch (e) {}
@@ -527,6 +582,15 @@ function renderDailyOverview() {
     ensureDay(ds);
   });
 
+  Object.keys(byDate).forEach(function (ds) {
+    var statuses = slotStatusesByDate[ds];
+    if (!statuses) return;
+    Object.keys(statuses).forEach(function (t) {
+      if (!t) return;
+      if (byDate[ds].slots[t] == null) byDate[ds].slots[t] = 0;
+    });
+  });
+
   var dates = Object.keys(byDate).sort();
   if (dates.length === 0) {
     dailyOverviewEl.innerHTML = '<div class="empty-state">No upcoming bookings.</div>';
@@ -588,10 +652,17 @@ function renderDailyOverview() {
     if (slotTimes.length === 0) {
       html += '<div class="daily-slots-empty">Inga bokningar</div>';
     } else {
+      var dsNorm = normalizeDateStr(ds);
+      var dsIso = dsNorm.length === 8 ? dsNorm.slice(0, 4) + "-" + dsNorm.slice(4, 6) + "-" + dsNorm.slice(6, 8) : ds;
       slotTimes.forEach(function (t) {
         var people = d.slots[t];
         var pct = (people / maxSlotPeople) * 100;
+        var w = t ? weatherByHour[dsIso + " " + t] : null;
+        var weatherHtml = w && WEATHER_EMOJI[w.symbol]
+          ? '<span class="daily-slot-weather" title="SMHI">' + WEATHER_EMOJI[w.symbol] + " " + w.temp + "°</span>"
+          : '<span class="daily-slot-weather daily-slot-weather-empty"></span>';
         html += '<div class="daily-slot">';
+        html += weatherHtml;
         html += '<span class="daily-slot-time">' + escapeHtml(t || "—") + "</span>";
         html += '<span class="daily-slot-line-wrap"><span class="daily-slot-line" style="width:' + pct.toFixed(2) + '%"></span></span>';
         html += '<span class="daily-slot-count">' + people + "p</span>";
