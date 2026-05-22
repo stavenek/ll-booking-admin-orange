@@ -625,7 +625,11 @@ function renderDailyOverview() {
     html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
     html += "</div>";
 
-    html += '<div class="daily-totals"><div class="daily-total-people"><span class="daily-total-bookings">' + total + "</span><span class=\"daily-total-label\">bokningar</span></div></div>";
+    var peopleTotal = d.adults + d.kids + d.pens;
+    html += '<div class="daily-totals"><div class="daily-total-people">';
+    html += '<div class="daily-total-row"><span class="daily-total-bookings">' + total + '</span><span class="daily-total-label">bokningar</span></div>';
+    html += '<div class="daily-total-breakdown">' + peopleTotal + " st : " + d.kids + "b/" + d.adults + "v/" + d.pens + "p</div>";
+    html += "</div></div>";
 
     html += '<div class="daily-slots">';
 

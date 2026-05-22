@@ -1871,7 +1871,20 @@ body {
 
 .daily-total-people {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.daily-total-row {
+  display: flex;
   align-items: baseline;
+}
+
+.daily-total-breakdown {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Responsive ────────────────────────────────────────────────── */
