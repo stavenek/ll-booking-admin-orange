@@ -1726,7 +1726,7 @@ body {
 
 .daily-slot {
   display: grid;
-  grid-template-columns: 56px 48px 1fr 32px;
+  grid-template-columns: 56px 48px 1fr;
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
@@ -1750,22 +1750,30 @@ body {
   display: block;
   width: 100%;
   min-width: 0;
-  height: 1px;
-  background: transparent;
+  height: 14px;
+  border-radius: var(--radius-input);
+  background: var(--color-border);
+  overflow: hidden;
 }
 
 .daily-slot-line {
-  display: block;
-  height: 1px;
-  background: var(--color-text);
-  min-width: 1px;
+  display: flex;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
-.daily-slot-count {
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
-  text-align: right;
+.daily-slot-seg {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
 }
 
@@ -1812,10 +1820,12 @@ body {
 }
 
 .daily-bar-wrap {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  margin-bottom: 2px;
 }
 
 .daily-bar {
@@ -1882,6 +1892,17 @@ body {
 }
 
 .daily-total-breakdown {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.daily-total-income {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+.daily-total-burgers {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;

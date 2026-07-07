@@ -538,6 +538,14 @@ function formatWeekday(dateStr) {
   return sv[dt.getDay()];
 }
 
+// Entrance fees (Kr per person) used to estimate daily income on the Daily Overview.
+// barn 2–15 år / vuxen / pensionär
+const ENTRANCE_FEES = { kids: 140, adults: 60, pensioners: 30 };
+// Multiplier applied to the raw entrance-fee sum for the income estimate.
+const INCOME_MULTIPLIER = 1.27;
+// Estimated hamburgers ≈ slope × besökare (visitors) + intercept.
+const HAMBURGER_FIT = { slope: 0.1125, intercept: -3.81 };
+
 function renderDailyOverview() {
   if (!dailyOverviewEl) return;
   if (allBookings.length === 0 && availableDates.length === 0) {
@@ -573,8 +581,9 @@ function renderDailyOverview() {
     d.kids += kids;
     d.pens += pens;
     var t = b.timeStr || "";
-    if (!d.slots[t]) d.slots[t] = 0;
-    d.slots[t] += adults + kids + pens;
+    if (!d.slots[t]) d.slots[t] = { newCount: 0, checkedCount: 0 };
+    if (status === "CHECKED_IN") d.slots[t].checkedCount += 1;
+    else d.slots[t].newCount += 1;
   });
 
   availableDates.forEach(function (ds) {
@@ -587,7 +596,7 @@ function renderDailyOverview() {
     if (!statuses) return;
     Object.keys(statuses).forEach(function (t) {
       if (!t) return;
-      if (byDate[ds].slots[t] == null) byDate[ds].slots[t] = 0;
+      if (byDate[ds].slots[t] == null) byDate[ds].slots[t] = { newCount: 0, checkedCount: 0 };
     });
   });
 
@@ -597,18 +606,19 @@ function renderDailyOverview() {
     return;
   }
 
-  var maxSlotPeople = 0;
+  var maxSlotBookings = 0;
   var maxTotal = 0;
   dates.forEach(function (ds) {
     var day = byDate[ds];
     var slots = day.slots;
     Object.keys(slots).forEach(function (t) {
-      if (slots[t] > maxSlotPeople) maxSlotPeople = slots[t];
+      var c = slots[t].newCount + slots[t].checkedCount;
+      if (c > maxSlotBookings) maxSlotBookings = c;
     });
     var t = day.newCount + day.checkedCount;
     if (t > maxTotal) maxTotal = t;
   });
-  if (maxSlotPeople === 0) maxSlotPeople = 1;
+  if (maxSlotBookings === 0) maxSlotBookings = 1;
   if (maxTotal === 0) maxTotal = 1;
 
   var html = '<div class="daily-list">';
@@ -620,18 +630,6 @@ function renderDailyOverview() {
     if (total === 0) rowClasses.push("daily-empty");
 
     html += '<div class="' + rowClasses.join(" ") + '">';
-    html += '<div class="daily-date">';
-    html += '<span class="daily-weekday">' + escapeHtml(formatWeekday(ds)) + (ds === today ? " · idag" : "") + "</span>";
-    html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
-    html += "</div>";
-
-    var peopleTotal = d.adults + d.kids + d.pens;
-    html += '<div class="daily-totals"><div class="daily-total-people">';
-    html += '<div class="daily-total-row"><span class="daily-total-bookings">' + total + '</span><span class="daily-total-label">bokningar</span></div>';
-    html += '<div class="daily-total-breakdown">' + peopleTotal + " st : " + d.kids + "b/" + d.adults + "v/" + d.pens + "p</div>";
-    html += "</div></div>";
-
-    html += '<div class="daily-slots">';
 
     var totalWidthPct = (total / maxTotal) * 100;
     var newPct = total > 0 ? (d.newCount / total) * 100 : 0;
@@ -642,15 +640,31 @@ function renderDailyOverview() {
     } else {
       html += '<div class="daily-bar" style="width:' + totalWidthPct.toFixed(2) + '%">';
       if (d.newCount > 0) {
-        var newLabel = d.checkedCount > 0 ? String(d.newCount) : d.newCount + " Bookings";
-        html += '<div class="daily-bar-segment daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + newLabel + "</div>";
+        html += '<div class="daily-bar-segment daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + d.newCount + "</div>";
       }
       if (d.checkedCount > 0) {
-        html += '<div class="daily-bar-segment daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + d.checkedCount + " Bookings</div>";
+        html += '<div class="daily-bar-segment daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + d.checkedCount + "</div>";
       }
       html += "</div>";
     }
     html += "</div>";
+
+    html += '<div class="daily-date">';
+    html += '<span class="daily-weekday">' + escapeHtml(formatWeekday(ds)) + (ds === today ? " · idag" : "") + "</span>";
+    html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
+    html += "</div>";
+
+    var peopleTotal = d.adults + d.kids + d.pens;
+    html += '<div class="daily-totals"><div class="daily-total-people">';
+    html += '<div class="daily-total-row"><span class="daily-total-bookings">' + total + '</span><span class="daily-total-label">bokningar</span></div>';
+    html += '<div class="daily-total-breakdown">' + peopleTotal + " st : " + d.kids + "b/" + d.adults + "v/" + d.pens + "p</div>";
+    var estIncome = Math.round((d.kids * ENTRANCE_FEES.kids + d.adults * ENTRANCE_FEES.adults + d.pens * ENTRANCE_FEES.pensioners) * INCOME_MULTIPLIER);
+    html += '<div class="daily-total-income" title="Uppskattad entréintäkt">~' + estIncome.toLocaleString("sv-SE") + " kr</div>";
+    var estBurgers = Math.max(0, Math.round(HAMBURGER_FIT.slope * peopleTotal + HAMBURGER_FIT.intercept));
+    html += '<div class="daily-total-burgers" title="Uppskattat antal hamburgare">≈ ' + estBurgers.toLocaleString("sv-SE") + " hamburgare</div>";
+    html += "</div></div>";
+
+    html += '<div class="daily-slots">';
 
     var slotTimes = Object.keys(d.slots).sort();
     if (slotTimes.length === 0) {
@@ -659,8 +673,11 @@ function renderDailyOverview() {
       var dsNorm = normalizeDateStr(ds);
       var dsIso = dsNorm.length === 8 ? dsNorm.slice(0, 4) + "-" + dsNorm.slice(4, 6) + "-" + dsNorm.slice(6, 8) : ds;
       slotTimes.forEach(function (t) {
-        var people = d.slots[t];
-        var pct = (people / maxSlotPeople) * 100;
+        var slot = d.slots[t];
+        var slotTotal = slot.newCount + slot.checkedCount;
+        var pct = (slotTotal / maxSlotBookings) * 100;
+        var newPct = slotTotal > 0 ? (slot.newCount / slotTotal) * 100 : 0;
+        var checkedPct = slotTotal > 0 ? (slot.checkedCount / slotTotal) * 100 : 0;
         var w = t ? weatherByHour[dsIso + " " + t] : null;
         var weatherHtml = w && WEATHER_EMOJI[w.symbol]
           ? '<span class="daily-slot-weather" title="SMHI">' + WEATHER_EMOJI[w.symbol] + " " + w.temp + "°</span>"
@@ -668,8 +685,18 @@ function renderDailyOverview() {
         html += '<div class="daily-slot">';
         html += weatherHtml;
         html += '<span class="daily-slot-time">' + escapeHtml(t || "—") + "</span>";
-        html += '<span class="daily-slot-line-wrap"><span class="daily-slot-line" style="width:' + pct.toFixed(2) + '%"></span></span>';
-        html += '<span class="daily-slot-count">' + people + "p</span>";
+        html += '<span class="daily-slot-line-wrap">';
+        if (slotTotal > 0) {
+          html += '<span class="daily-slot-line" style="width:' + pct.toFixed(2) + '%">';
+          if (slot.newCount > 0) {
+            html += '<span class="daily-slot-seg daily-bar-new" style="width:' + newPct.toFixed(2) + '%">' + slot.newCount + '</span>';
+          }
+          if (slot.checkedCount > 0) {
+            html += '<span class="daily-slot-seg daily-bar-checked" style="width:' + checkedPct.toFixed(2) + '%">' + slot.checkedCount + '</span>';
+          }
+          html += "</span>";
+        }
+        html += "</span>";
         html += "</div>";
       });
     }
