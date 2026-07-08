@@ -581,9 +581,10 @@ function renderDailyOverview() {
     d.kids += kids;
     d.pens += pens;
     var t = b.timeStr || "";
-    if (!d.slots[t]) d.slots[t] = { newCount: 0, checkedCount: 0 };
+    if (!d.slots[t]) d.slots[t] = { newCount: 0, checkedCount: 0, people: 0 };
     if (status === "CHECKED_IN") d.slots[t].checkedCount += 1;
     else d.slots[t].newCount += 1;
+    d.slots[t].people += adults + kids + pens;
   });
 
   availableDates.forEach(function (ds) {
@@ -596,7 +597,7 @@ function renderDailyOverview() {
     if (!statuses) return;
     Object.keys(statuses).forEach(function (t) {
       if (!t) return;
-      if (byDate[ds].slots[t] == null) byDate[ds].slots[t] = { newCount: 0, checkedCount: 0 };
+      if (byDate[ds].slots[t] == null) byDate[ds].slots[t] = { newCount: 0, checkedCount: 0, people: 0 };
     });
   });
 
@@ -631,10 +632,12 @@ function renderDailyOverview() {
 
     html += '<div class="' + rowClasses.join(" ") + '">';
 
+    var peopleTotal = d.adults + d.kids + d.pens;
     var totalWidthPct = (total / maxTotal) * 100;
     var newPct = total > 0 ? (d.newCount / total) * 100 : 0;
     var checkedPct = total > 0 ? (d.checkedCount / total) * 100 : 0;
     html += '<div class="daily-bar-wrap">';
+    html += '<div class="daily-bar-track">';
     if (total === 0) {
       html += '<div class="daily-bar" style="width:4px"></div>';
     } else {
@@ -648,13 +651,14 @@ function renderDailyOverview() {
       html += "</div>";
     }
     html += "</div>";
+    html += '<span class="daily-bar-people" title="Antal besökare">' + peopleTotal + "</span>";
+    html += "</div>";
 
     html += '<div class="daily-date">';
     html += '<span class="daily-weekday">' + escapeHtml(formatWeekday(ds)) + (ds === today ? " · idag" : "") + "</span>";
     html += '<span class="daily-datestr">' + escapeHtml(ds) + "</span>";
     html += "</div>";
 
-    var peopleTotal = d.adults + d.kids + d.pens;
     html += '<div class="daily-totals"><div class="daily-total-people">';
     html += '<div class="daily-total-row"><span class="daily-total-bookings">' + total + '</span><span class="daily-total-label">bokningar</span></div>';
     html += '<div class="daily-total-breakdown">' + peopleTotal + " st : " + d.kids + "b/" + d.adults + "v/" + d.pens + "p</div>";
@@ -697,6 +701,7 @@ function renderDailyOverview() {
           html += "</span>";
         }
         html += "</span>";
+        html += '<span class="daily-slot-people" title="Antal besökare">' + slot.people + "</span>";
         html += "</div>";
       });
     }

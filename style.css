@@ -1726,10 +1726,18 @@ body {
 
 .daily-slot {
   display: grid;
-  grid-template-columns: 56px 48px 1fr;
+  grid-template-columns: 56px 48px 1fr 40px;
   align-items: center;
   gap: var(--space-sm);
   min-width: 0;
+}
+
+.daily-slot-people {
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .daily-slot-weather {
@@ -1822,10 +1830,25 @@ body {
 .daily-bar-wrap {
   grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--space-sm);
   min-width: 0;
   margin-bottom: 2px;
+}
+
+.daily-bar-track {
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-bar-people {
+  width: 40px;
+  text-align: right;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .daily-bar {
